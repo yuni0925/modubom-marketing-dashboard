@@ -541,8 +541,7 @@ function renderTrendDetail(type){
   if(type==='monthly'){
     title='월별 매출 추이';
     datasets=[
-      {label:'매출',data:HIST.revenue,borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.05)',tension:.4,fill:true,borderWidth:2,pointRadius:2},
-      {label:'목표',data:HIST.target.map(v=>v||null),borderColor:'#e87c00',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+      {label:'매출',data:HIST.revenue,borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.05)',tension:.4,fill:true,borderWidth:2,pointRadius:2}
     ];
   } else if(type==='yoy'){
     title='전년 대비 매출 성장률 (2025 vs 2024 기준)';
