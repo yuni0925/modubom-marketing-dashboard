@@ -242,7 +242,6 @@ tr:hover td{background:var(--surface2)}
       <div class="fg"><label class="fl">전월 동기간 매출 (원)</label><input id="in-prev-m" type="number" placeholder="예: 55000000"></div>
       <div class="fg"><label class="fl">전년 동월 매출 (원)</label><input id="in-prev-y" type="number" placeholder="예: 121146504"></div>
       <div class="fg"><label class="fl">누적 매출 이익 (원)</label><input id="in-profit" type="number" placeholder="예: 18000000"></div>
-      <div class="fg"><label class="fl">누적 광고비 합계 (원)</label><input id="in-ad" type="number" placeholder="예: 15000000"></div>
     </div>
   </div>
 
@@ -265,16 +264,21 @@ tr:hover td{background:var(--surface2)}
   </div>
 
   <div class="section card">
-    <div class="card-title">채널별 누적 광고비 (원)</div>
+    <div class="card-title">채널별 누적 광고비 (원) — 합계 자동 계산</div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">네이버 광고비</label><input id="in-ad-naver" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">쿠팡 광고비</label><input id="in-ad-coupang" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">올리브영 광고비</label><input id="in-ad-olive" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">⭐ 네이버 광고비</label><input id="in-ad-naver" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg"><label class="fl">⭐ 쿠팡 광고비</label><input id="in-ad-coupang" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg"><label class="fl">⭐ 올리브영 광고비</label><input id="in-ad-olive" type="number" placeholder="0" oninput="calcAdTotal()"></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">메타/인플루언서</label><input id="in-ad-meta" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">기타 광고비</label><input id="in-ad-etc" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">메타/인플루언서</label><input id="in-ad-meta" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg"><label class="fl">기타 광고비</label><input id="in-ad-etc" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg">
+        <label class="fl" style="color:var(--green);font-weight:600">광고비 합계 (자동)</label>
+        <div id="ad-total-display" style="background:var(--green-bg);border:1px solid #86c9a4;border-radius:var(--rs);padding:8px 10px;font-size:14px;font-weight:600;color:var(--green)">0원</div>
+      </div>
     </div>
+    <input type="hidden" id="in-ad" value="0">
   </div>
 
   <!-- 주차별 누적 현황 미리보기 -->
@@ -343,6 +347,22 @@ tr:hover td{background:var(--surface2)}
 
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwLKfVnOi1D4dvih5JeflQihm2x8JOoSx0g8R95mMd6M8f0PDgcLXcc7hOPkazbI45LkQ/exec';
+
+function calcAdTotal(){
+  const total=['in-ad-naver','in-ad-coupang','in-ad-olive','in-ad-meta','in-ad-etc'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
+  document.getElementById('in-ad').value=total;
+  const rev=parseFloat(document.getElementById('in-rev')?.value)||0;
+  const disp=document.getElementById('ad-total-display');
+  const acos=rev&&total?(total/rev*100):null;
+  const acosText=acos!==null?`  (ACoS ${acos.toFixed(1)}%)`:'';
+  disp.textContent=Math.round(total).toLocaleString('ko-KR')+'원'+acosText;
+  if(acos!==null){
+    const ok=acos<25;
+    disp.style.color=ok?'var(--green)':'var(--red)';
+    disp.style.borderColor=ok?'#86c9a4':'#f0a090';
+    disp.style.background=ok?'var(--green-bg)':'var(--red-bg)';
+  }
+}
 
 // 실제 데이터 (매출시트 기반)
 const HIST = {
@@ -683,6 +703,8 @@ async function loadData(){
       const keys=['revenue','target','prevMonth','prevYear','profit','adcost'];
       flds.forEach((f,i)=>{const el=document.getElementById('in-'+f);if(el&&S[keys[i]])el.value=S[keys[i]];});
       ['naver','coupang','olive','ably','zigzag','musinsa','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
+      ['naver','coupang','olive','meta','etc'].forEach(k=>{const el=document.getElementById('in-ad-'+k);if(el&&S.adChannels[k])el.value=S.adChannels[k];});
+      calcAdTotal();
       if(d.week){const el=document.getElementById('in-week');if(el)el.value=d.week;}
       if(d.month){const el=document.getElementById('in-month');if(el)el.value=d.month;}
       applyStateToUI();
