@@ -833,7 +833,15 @@ async function saveData(){
     currentWeek:week, currentMonth:month, currentYear:year
   });
 
-  const savePayload={...weekData, weeklyData:S.weeklyData};
+  const savePayload={
+    year, month, week, weekKey,
+    revenue:weekData.revenue, target:weekData.target,
+    prevMonth:weekData.prevMonth, prevYear:weekData.prevYear,
+    profit:weekData.profit, adcost:weekData.adcost,
+    channels:weekData.channels,
+    adChannels:weekData.adChannels,
+    updatedAt:weekData.updatedAt
+  };
 
   const st=document.getElementById('sync');
   st.textContent='저장 중...';st.className='sync';
