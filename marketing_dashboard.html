@@ -675,11 +675,11 @@ function updateOverview(){
   // 채널 요약 카드
   const ch=S.channels;
   const total=Object.values(ch).reduce((a,b)=>a+b,0);
-  const chInfo={naver:{label:'네이버',color:'#3266ad'},coupang:{label:'쿠팡',color:'#e87c00'},olive:{label:'올리브영',color:'#3a9e68'},ably:{label:'에이블리',color:'#9b5de5'},zigzag:{label:'지그재그',color:'#f15bb5'},musinsa:{label:'무신사',color:'#444'},export:{label:'해외수출',color:'#0077b6'},etc:{label:'공구/기타',color:'#888'}};
+  const chInfo={naver:{label:'네이버',color:'#3266ad'},coupang:{label:'쿠팡',color:'#e87c00'},olive:{label:'올리브영',color:'#3a9e68'},ably:{label:'에이블리',color:'#9b5de5'},zigzag:{label:'지그재그',color:'#f15bb5'},musinsa:{label:'무신사',color:'#444'},'11st':{label:'11번가',color:'#ff6b35'},gmarket:{label:'G마켓/옥션',color:'#0099cc'},qten:{label:'큐텐JP',color:'#e63946'},amazon:{label:'아마존US',color:'#ff9900'},export:{label:'해외수출',color:'#0077b6'},etc:{label:'공구/기타',color:'#888'}};
   const sumEl=document.getElementById('ov-ch-summary');
   if(!total){sumEl.innerHTML='<div style="color:var(--hint);font-size:13px">채널 데이터를 입력해주세요.</div>';return;}
   sumEl.innerHTML=Object.entries(ch).filter(([,v])=>v>0).map(([k,v])=>{
-    const c=chInfo[k];const pct=total?(v/total*100).toFixed(1):0;
+    const c=chInfo[k]||{label:k,color:'#aaa'};const pct=total?(v/total*100).toFixed(1):0;
     return`<div style="background:var(--surface2);border-radius:var(--rs);padding:10px 12px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <div style="width:8px;height:8px;border-radius:50%;background:${c.color}"></div>
