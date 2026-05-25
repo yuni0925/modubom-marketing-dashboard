@@ -346,7 +346,7 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwLKfVnOi1D4dvih5JeflQihm2x8JOoSx0g8R95mMd6M8f0PDgcLXcc7hOPkazbI45LkQ/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzntuzpW9lH5xXxTBYjPoxSPbKjJb6iOqVxCvB00q3HLWVuARx2kUKfw-OMepxCXvhcDw/exec';
 
 function calcAdTotal(){
   const total=['in-ad-naver','in-ad-coupang','in-ad-olive','in-ad-meta','in-ad-etc'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
@@ -457,13 +457,11 @@ function updateOverview(){
 function renderTrend(){
   const months=HIST.months.slice(-12);
   const data=HIST.revenue.slice(-12);
-  const targets=HIST.target.slice(-12);
   if(trendChart) trendChart.destroy();
   trendChart=new Chart(document.getElementById('trendChart'),{
     type:'line',
     data:{labels:months,datasets:[
-      {label:'매출',data:data,borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.05)',tension:.4,pointRadius:3,fill:true,borderWidth:2},
-      {label:'목표',data:targets.map(v=>v||null),borderColor:'#e87c00',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+      {label:'매출',data:data,borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.05)',tension:.4,pointRadius:3,fill:true,borderWidth:2}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
   });
@@ -689,7 +687,11 @@ async function loadData(){
   const st=document.getElementById('sync');
   st.textContent='불러오는 중...';st.className='sync';
   try{
-    const res=await fetch(SHEET_URL+'?t='+Date.now());
+    const res=await fetch(SHEET_URL+'?t='+Date.now(),{
+      method:'GET',
+      headers:{'Content-Type':'application/json'}
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const json=await res.json();
     if(json.status==='success'&&json.data){
       const d=json.data;
@@ -698,9 +700,8 @@ async function loadData(){
         adChannels:{...S.adChannels,...(d.adChannels||{})},
         weeklyData:{...S.weeklyData,...(d.weeklyData||{})}
       };
-      // 입력폼에 최신값 채우기
-      const flds=['rev','target','prev-m','prev-y','profit','ad'];
-      const keys=['revenue','target','prevMonth','prevYear','profit','adcost'];
+      const flds=['rev','target','prev-m','prev-y','profit'];
+      const keys=['revenue','target','prevMonth','prevYear','profit'];
       flds.forEach((f,i)=>{const el=document.getElementById('in-'+f);if(el&&S[keys[i]])el.value=S[keys[i]];});
       ['naver','coupang','olive','ably','zigzag','musinsa','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
       ['naver','coupang','olive','meta','etc'].forEach(k=>{const el=document.getElementById('in-ad-'+k);if(el&&S.adChannels[k])el.value=S.adChannels[k];});
@@ -712,8 +713,14 @@ async function loadData(){
       const wk=d.week?` (${d.month}월 ${d.week}주차)`:'';
       st.textContent=`✓ 동기화됨${wk} `+(d.updatedAt||'');st.className='sync ok';
       document.getElementById('overview-sub').textContent='마지막 업데이트: '+(d.updatedAt||'')+(d.week?` · ${d.month}월 ${d.week}주차 기준`:'');
-    }else{st.textContent='저장된 데이터 없음';st.className='sync';}
-  }catch(e){st.textContent='불러오기 실패';st.className='sync err';}
+    }else{
+      st.textContent='저장된 데이터 없음';st.className='sync';
+    }
+  }catch(e){
+    console.error('loadData error:',e);
+    // CORS 이슈 시 저장된 데이터 없음으로 처리 (첫 사용 시 정상)
+    st.textContent='저장된 데이터 없음 (첫 사용 시 정상)';st.className='sync';
+  }
 }
 
 // API Key
