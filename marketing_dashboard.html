@@ -218,12 +218,12 @@ tr:hover td{background:var(--surface2)}
   <div class="section card">
     <div class="card-title">기준 정보</div>
     <div class="form-grid">
-      <div class="fg"><label class="fl">연도</label><select id="in-year"><option>2026</option><option>2025</option><option>2024</option></select></div>
-      <div class="fg"><label class="fl">월</label><select id="in-month"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div>
+      <div class="fg"><label class="fl">연도</label><select id="in-year" onchange="autoFillPrevMonth()"><option>2026</option><option>2025</option><option>2024</option></select></div>
+      <div class="fg"><label class="fl">월</label><select id="in-month" onchange="autoFillPrevMonth()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div>
     </div>
     <div class="form-grid">
       <div class="fg"><label class="fl">입력 주차</label>
-        <select id="in-week">
+        <select id="in-week" onchange="autoFillPrevMonth()">
           <option value="1">1주차 (1~7일)</option>
           <option value="2">2주차 (1~14일 누적)</option>
           <option value="3">3주차 (1~21일 누적)</option>
@@ -234,7 +234,7 @@ tr:hover td{background:var(--surface2)}
       <div class="fg"><label class="fl">목표 매출 (원)</label><div class="num-wrap"><input id="in-target" type="number" placeholder="예: 110000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-target"></div></div></div>
     </div>
     <div style="background:var(--amber-bg);border:1px solid #f5c584;border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--amber);margin-top:8px">
-      💡 매주 <b>그 주까지의 누적 합계</b>를 입력하세요. 예: 2주차라면 1~14일 전체 누적값
+      💡 매주 <b>그 주까지의 누적 합계</b>를 입력하세요. 연도/월/주차 선택 시 전월 동기간 매출이 자동 입력됩니다.
     </div>
   </div>
 
@@ -242,7 +242,10 @@ tr:hover td{background:var(--surface2)}
     <div class="card-title">누적 매출 데이터 (원 단위)</div>
     <div class="form-grid">
       <div class="fg"><label class="fl">이번 달 누적 매출 (원)</label><div class="num-wrap"><input id="in-rev" type="number" placeholder="예: 42000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-rev"></div></div></div>
-      <div class="fg"><label class="fl">전월 동기간 매출 (원)</label><div class="num-wrap"><input id="in-prev-m" type="number" placeholder="예: 55000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-prev-m"></div></div></div>
+      <div class="fg">
+        <label class="fl" style="display:flex;align-items:center;gap:6px">전월 동기간 매출 (원) <span id="prev-m-auto-badge" style="display:none;background:var(--blue-bg);color:var(--blue);font-size:10px;padding:1px 6px;border-radius:999px;font-weight:600">자동입력</span></label>
+        <div class="num-wrap"><input id="in-prev-m" type="number" placeholder="자동 입력됩니다" oninput="showPreview(this)"><div class="num-preview" id="prev-in-prev-m"></div></div>
+      </div>
       <div class="fg"><label class="fl">전년 동월 매출 (원)</label><div class="num-wrap"><input id="in-prev-y" type="number" placeholder="예: 121146504" oninput="showPreview(this)"><div class="num-preview" id="prev-in-prev-y"></div></div></div>
       <div class="fg"><label class="fl">누적 매출 이익 (원)</label><div class="num-wrap"><input id="in-profit" type="number" placeholder="예: 18000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-profit"></div></div></div>
     </div>
@@ -261,7 +264,13 @@ tr:hover td{background:var(--surface2)}
       <div class="fg"><label class="fl">무신사</label><div class="num-wrap"><input id="in-musinsa" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-musinsa"></div></div></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">해외 수출</label><div class="num-wrap"><input id="in-export" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-export"></div></div></div>
+      <div class="fg"><label class="fl">11번가</label><div class="num-wrap"><input id="in-11st" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-11st"></div></div></div>
+      <div class="fg"><label class="fl">G마켓/옥션</label><div class="num-wrap"><input id="in-gmarket" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-gmarket"></div></div></div>
+      <div class="fg"><label class="fl">큐텐JP</label><div class="num-wrap"><input id="in-qten" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-qten"></div></div></div>
+    </div>
+    <div class="form-grid fg3">
+      <div class="fg"><label class="fl">아마존US</label><div class="num-wrap"><input id="in-amazon" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-amazon"></div></div></div>
+      <div class="fg"><label class="fl">해외 수출 (B2B)</label><div class="num-wrap"><input id="in-export" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-export"></div></div></div>
       <div class="fg"><label class="fl">공구/기타</label><div class="num-wrap"><input id="in-etc" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-etc"></div></div></div>
     </div>
   </div>
@@ -274,7 +283,16 @@ tr:hover td{background:var(--surface2)}
       <div class="fg"><label class="fl">⭐ 올리브영 광고비</label><div class="num-wrap"><input id="in-ad-olive" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-olive"></div></div></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">메타/인플루언서</label><div class="num-wrap"><input id="in-ad-meta" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-meta"></div></div></div>
+      <div class="fg"><label class="fl">메타</label><div class="num-wrap"><input id="in-ad-meta" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-meta"></div></div></div>
+      <div class="fg"><label class="fl">인플루언서</label><div class="num-wrap"><input id="in-ad-influencer" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-influencer"></div></div></div>
+      <div class="fg"><label class="fl">아마존</label><div class="num-wrap"><input id="in-ad-amazon" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-amazon"></div></div></div>
+    </div>
+    <div class="form-grid fg3">
+      <div class="fg"><label class="fl">틱톡 트래픽</label><div class="num-wrap"><input id="in-ad-tiktok" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-tiktok"></div></div></div>
+      <div class="fg"><label class="fl">에이블리</label><div class="num-wrap"><input id="in-ad-ably" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-ably"></div></div></div>
+      <div class="fg"><label class="fl">지그재그</label><div class="num-wrap"><input id="in-ad-zigzag" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-zigzag"></div></div></div>
+    </div>
+    <div class="form-grid fg3">
       <div class="fg"><label class="fl">기타 광고비</label><div class="num-wrap"><input id="in-ad-etc" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-etc"></div></div></div>
       <div class="fg">
         <label class="fl" style="color:var(--green);font-weight:600">광고비 합계 (자동)</label>
@@ -366,7 +384,7 @@ function refreshAllPreviews(){
 }
 
 function calcAdTotal(){
-  const total=['in-ad-naver','in-ad-coupang','in-ad-olive','in-ad-meta','in-ad-etc'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
+  const total=['in-ad-naver','in-ad-coupang','in-ad-olive','in-ad-meta','in-ad-influencer','in-ad-amazon','in-ad-tiktok','in-ad-ably','in-ad-zigzag','in-ad-etc'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
   document.getElementById('in-ad').value=total;
   const rev=parseFloat(document.getElementById('in-rev')?.value)||0;
   const disp=document.getElementById('ad-total-display');
@@ -381,28 +399,51 @@ function calcAdTotal(){
   }
 }
 
-// 실제 데이터 (매출시트 기반)
+// 실제 데이터 (매출시트 기반) — 월별 전체 매출 (주차별 비율 추정용)
 const HIST = {
   months: ['25.01','25.02','25.03','25.04','25.05','25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'],
   revenue: [79067406,80077878,122846105,107566126,121146504,101600221,95646004,92683075,115934828,94343811,173678188,161233516,123319782,116668957,227178658,149539716,84905058],
   adcost:  [21444005,54083023,21505553,14432895,23314002,28056752,19077342,16604071,25797574,11665000,59553355,30141861,56689374,46474871,51806801,39744330,35242600],
   profit:  [32526029,32881267,47591984,46729542,51262510,41202799,39325309,38845734,41870005,38418017,65745530,66952957,54769953,49910688,95102309,63979341,37794033],
   target:  [0,0,0,0,0,0,0,0,0,0,0,0,130000000,120000000,170000000,220000000,110000000],
-  channels_2026: {
-    '1': {naver:41652900,coupang:50281400,olive:12007492,ably:2557300,zigzag:4039700,musinsa:652500,export:6652800,etc:2262528},
-    '2': {naver:29811300,coupang:49350700,olive:14241686,ably:1873300,zigzag:2384100,musinsa:567500,export:10141120,etc:3299205},
-    '3': {naver:58024900,coupang:76693700,olive:33147281,ably:606600,zigzag:3030200,musinsa:500000,export:38034240,etc:12897885},
-    '4': {naver:42463700,coupang:62933400,olive:20623703,ably:545500,zigzag:1793400,musinsa:457500,export:3596649,etc:7101402},
-    '5': {naver:30446800,coupang:30683800,olive:16418862,ably:320200,zigzag:1086500,musinsa:462500,export:3326400,etc:972496}
+  // 연도/월 → 월 전체 매출 빠른 조회
+  byYearMonth: {
+    '2025_1':79067406,'2025_2':80077878,'2025_3':122846105,'2025_4':107566126,
+    '2025_5':121146504,'2025_6':101600221,'2025_7':95646004,'2025_8':92683075,
+    '2025_9':115934828,'2025_10':94343811,'2025_11':173678188,'2025_12':161233516,
+    '2026_1':123319782,'2026_2':116668957,'2026_3':227178658,'2026_4':149539716,'2026_5':84905058
   }
 };
+
+// 전월 동기간 매출 자동 입력
+function autoFillPrevMonth(){
+  const year=parseInt(document.getElementById('in-year').value);
+  const month=parseInt(document.getElementById('in-month').value);
+  const week=parseInt(document.getElementById('in-week').value);
+  // 전월 계산
+  const prevYear=month===1?year-1:year;
+  const prevMonth=month===1?12:month-1;
+  const key=`${prevYear}_${prevMonth}`;
+  const prevMonthTotal=HIST.byYearMonth[key];
+  if(!prevMonthTotal) return;
+  // 주차별 일수 비율로 추정 (1주:7/30, 2주:14/30, 3주:21/30, 4주:28/30, 5주:전체)
+  const weekRatios=[7/30,14/30,21/30,28/30,1];
+  const ratio=weekRatios[week-1]||1;
+  const estimated=Math.round(prevMonthTotal*ratio);
+  const el=document.getElementById('in-prev-m');
+  el.value=estimated;
+  showPreview(el);
+  // 자동입력 배지 표시
+  const badge=document.getElementById('prev-m-auto-badge');
+  if(badge){badge.style.display='inline';badge.textContent=`자동입력 (${prevYear}.${prevMonth}월 기준)`;}
+}
 
 let S = {
   year:2026, month:5,
   revenue:84905058, target:110000000, prevMonth:149539716, prevYear:121146504,
   profit:37794033, adcost:35242600,
-  channels:{naver:30446800,coupang:30683800,olive:16418862,ably:320200,zigzag:1086500,musinsa:462500,export:3326400,etc:972496},
-  adChannels:{naver:0,coupang:0,olive:0,meta:0,etc:0},
+  channels:{naver:30446800,coupang:30683800,olive:16418862,ably:320200,zigzag:1086500,musinsa:462500,'11st':0,gmarket:0,qten:0,amazon:0,export:3326400,etc:972496},
+  adChannels:{naver:0,coupang:0,olive:0,meta:0,influencer:0,amazon:0,tiktok:0,ably:0,zigzag:0,etc:0},
   trend:[101600221,95646004,92683075,115934828,94343811,173678188,161233516,123319782,116668957,227178658,149539716,84905058]
 };
 
@@ -486,8 +527,8 @@ function renderTrend(){
 
 function renderChList(){
   const ch=S.channels;
-  const colors={naver:'#3266ad',coupang:'#e87c00',olive:'#3a9e68',ably:'#9b5de5',zigzag:'#f15bb5',musinsa:'#444444',export:'#0077b6',etc:'#888888'};
-  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사',export:'해외수출',etc:'공구/기타'};
+  const colors={naver:'#3266ad',coupang:'#e87c00',olive:'#3a9e68',ably:'#9b5de5',zigzag:'#f15bb5',musinsa:'#444444','11st':'#ff6b35',gmarket:'#0099cc',qten:'#e63946',amazon:'#ff9900',export:'#0077b6',etc:'#888888'};
+  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사','11st':'11번가',gmarket:'G마켓/옥션',qten:'큐텐JP',amazon:'아마존US',export:'해외수출',etc:'공구/기타'};
   const total=Object.values(ch).reduce((a,b)=>a+b,0);
   const el=document.getElementById('ch-list');
   if(!total){el.innerHTML='<div style="color:var(--hint);font-size:13px;padding:16px 0">채널 데이터를 입력해주세요.</div>';return;}
@@ -508,18 +549,20 @@ function renderChList(){
 
 function renderChPie(){
   const ch=S.channels;
-  const vals=Object.values(ch);
+  const keys=Object.keys(ch);
+  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사','11st':'11번가',gmarket:'G마켓/옥션',qten:'큐텐JP',amazon:'아마존US',export:'해외수출',etc:'공구/기타'};
+  const colors={naver:'#3266ad',coupang:'#e87c00',olive:'#3a9e68',ably:'#9b5de5',zigzag:'#f15bb5',musinsa:'#444','11st':'#ff6b35',gmarket:'#0099cc',qten:'#e63946',amazon:'#ff9900',export:'#0077b6',etc:'#888'};
   if(chPieChart) chPieChart.destroy();
   chPieChart=new Chart(document.getElementById('chPieChart'),{
     type:'doughnut',
-    data:{labels:['네이버','쿠팡','올리브영','에이블리','지그재그','무신사','해외수출','공구/기타'],datasets:[{data:vals,backgroundColor:['#3266ad','#e87c00','#3a9e68','#9b5de5','#f15bb5','#444','#0077b6','#888'],borderWidth:2,borderColor:'#fff'}]},
+    data:{labels:keys.map(k=>labels[k]||k),datasets:[{data:keys.map(k=>ch[k]||0),backgroundColor:keys.map(k=>colors[k]||'#aaa'),borderWidth:2,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10}}}}
   });
 }
 
 function renderChAdList(){
   const ad=S.adChannels;
-  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',meta:'메타/인플',etc:'기타'};
+  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',meta:'메타',influencer:'인플루언서',amazon:'아마존',tiktok:'틱톡 트래픽',ably:'에이블리',zigzag:'지그재그',etc:'기타'};
   const ch=S.channels;
   const el=document.getElementById('ch-ad-list');
   el.innerHTML=Object.entries(ad).map(([k,v])=>{
@@ -537,7 +580,7 @@ function renderChAdList(){
 function renderChTable(){
   const ch=S.channels;
   const ad=S.adChannels;
-  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사',export:'해외수출',etc:'공구/기타'};
+  const labels={naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사','11st':'11번가',gmarket:'G마켓/옥션',qten:'큐텐JP',amazon:'아마존US',export:'해외수출',etc:'공구/기타'};
   const totalRev=Object.values(ch).reduce((a,b)=>a+b,0);
   const totalProfit=S.profit;
   const avgMargin=totalRev?totalProfit/totalRev:0;
@@ -622,8 +665,8 @@ async function saveData(){
     revenue, target,
     prevMonth:g('in-prev-m'), prevYear:g('in-prev-y'),
     profit:g('in-profit'), adcost:g('in-ad'),
-    channels:{naver:g('in-naver'),coupang:g('in-coupang'),olive:g('in-olive'),ably:g('in-ably'),zigzag:g('in-zigzag'),musinsa:g('in-musinsa'),export:g('in-export'),etc:g('in-etc')},
-    adChannels:{naver:g('in-ad-naver'),coupang:g('in-ad-coupang'),olive:g('in-ad-olive'),meta:g('in-ad-meta'),etc:g('in-ad-etc')},
+    channels:{naver:g('in-naver'),coupang:g('in-coupang'),olive:g('in-olive'),ably:g('in-ably'),zigzag:g('in-zigzag'),musinsa:g('in-musinsa'),'11st':g('in-11st'),gmarket:g('in-gmarket'),qten:g('in-qten'),amazon:g('in-amazon'),export:g('in-export'),etc:g('in-etc')},
+    adChannels:{naver:g('in-ad-naver'),coupang:g('in-ad-coupang'),olive:g('in-ad-olive'),meta:g('in-ad-meta'),influencer:g('in-ad-influencer'),amazon:g('in-ad-amazon'),tiktok:g('in-ad-tiktok'),ably:g('in-ad-ably'),zigzag:g('in-ad-zigzag'),etc:g('in-ad-etc')},
     updatedAt:new Date().toLocaleString('ko-KR')
   };
 
@@ -719,8 +762,8 @@ async function loadData(){
       const flds=['rev','target','prev-m','prev-y','profit'];
       const keys=['revenue','target','prevMonth','prevYear','profit'];
       flds.forEach((f,i)=>{const el=document.getElementById('in-'+f);if(el&&S[keys[i]])el.value=S[keys[i]];});
-      ['naver','coupang','olive','ably','zigzag','musinsa','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
-      ['naver','coupang','olive','meta','etc'].forEach(k=>{const el=document.getElementById('in-ad-'+k);if(el&&S.adChannels[k])el.value=S.adChannels[k];});
+      ['naver','coupang','olive','ably','zigzag','musinsa','11st','gmarket','qten','amazon','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
+      ['naver','coupang','olive','meta','influencer','amazon','tiktok','ably','zigzag','etc'].forEach(k=>{const el=document.getElementById('in-ad-'+k);if(el&&S.adChannels[k])el.value=S.adChannels[k];});
       calcAdTotal();
       refreshAllPreviews();
       if(d.week){const el=document.getElementById('in-week');if(el)el.value=d.week;}
@@ -828,7 +871,7 @@ window.addEventListener('load',()=>{
   applyStateToUI();
   renderTrend();
   renderChList();
-  // 시트에서 불러오기 시도
+  autoFillPrevMonth();
   loadData().catch(()=>{});
   document.getElementById('overview-sub').textContent='2026년 5월 기준 (매출시트 연동 데이터)';
 });
