@@ -210,7 +210,7 @@ tr:hover td{background:var(--surface2)}
 <!-- 데이터 입력 -->
 <div class="page" id="page-input">
   <div class="page-title">데이터 입력</div>
-  <div class="page-sub">매출 및 광고비 데이터를 입력하고 저장하세요. 구글 시트에 자동 저장됩니다.</div>
+  <div class="page-sub">매주 이번 주까지의 누적 데이터를 입력하세요. 저장하면 구글 시트에 자동 반영됩니다.</div>
 
   <div class="section card">
     <div class="card-title">기준 정보</div>
@@ -218,26 +218,40 @@ tr:hover td{background:var(--surface2)}
       <div class="fg"><label class="fl">연도</label><select id="in-year"><option>2026</option><option>2025</option><option>2024</option></select></div>
       <div class="fg"><label class="fl">월</label><select id="in-month"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div>
     </div>
-  </div>
-
-  <div class="section card">
-    <div class="card-title">매출 데이터 (원 단위)</div>
     <div class="form-grid">
-      <div class="fg"><label class="fl">이번 달 실제 매출 (원)</label><input id="in-rev" type="number" placeholder="예: 84905058"></div>
-      <div class="fg"><label class="fl">이번 달 목표 매출 (원)</label><input id="in-target" type="number" placeholder="예: 110000000"></div>
-      <div class="fg"><label class="fl">전월 매출 (원)</label><input id="in-prev-m" type="number" placeholder="예: 149539716"></div>
-      <div class="fg"><label class="fl">전년 동월 매출 (원)</label><input id="in-prev-y" type="number" placeholder="예: 121146504"></div>
-      <div class="fg"><label class="fl">매출 이익 (원)</label><input id="in-profit" type="number" placeholder="예: 37794033"></div>
-      <div class="fg"><label class="fl">광고비 합계 (원)</label><input id="in-ad" type="number" placeholder="예: 35242600"></div>
+      <div class="fg"><label class="fl">입력 주차</label>
+        <select id="in-week">
+          <option value="1">1주차 (1~7일)</option>
+          <option value="2">2주차 (1~14일 누적)</option>
+          <option value="3">3주차 (1~21일 누적)</option>
+          <option value="4">4주차 (1~28일 누적)</option>
+          <option value="5">월말 확정 (전체 누적)</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">목표 매출 (원)</label><input id="in-target" type="number" placeholder="예: 110000000"></div>
+    </div>
+    <div style="background:var(--amber-bg);border:1px solid #f5c584;border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--amber);margin-top:8px">
+      💡 매주 <b>그 주까지의 누적 합계</b>를 입력하세요. 예: 2주차라면 1~14일 전체 누적값
     </div>
   </div>
 
   <div class="section card">
-    <div class="card-title">채널별 매출 (원 단위) — 주력 3채널</div>
+    <div class="card-title">누적 매출 데이터 (원 단위)</div>
+    <div class="form-grid">
+      <div class="fg"><label class="fl">이번 달 누적 매출 (원)</label><input id="in-rev" type="number" placeholder="예: 42000000"></div>
+      <div class="fg"><label class="fl">전월 동기간 매출 (원)</label><input id="in-prev-m" type="number" placeholder="예: 55000000"></div>
+      <div class="fg"><label class="fl">전년 동월 매출 (원)</label><input id="in-prev-y" type="number" placeholder="예: 121146504"></div>
+      <div class="fg"><label class="fl">누적 매출 이익 (원)</label><input id="in-profit" type="number" placeholder="예: 18000000"></div>
+      <div class="fg"><label class="fl">누적 광고비 합계 (원)</label><input id="in-ad" type="number" placeholder="예: 15000000"></div>
+    </div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title">채널별 누적 매출 (원) — 주력 채널</div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">🟢 네이버</label><input id="in-naver" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">🟠 쿠팡</label><input id="in-coupang" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">🔵 올리브영</label><input id="in-olive" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">⭐ 네이버</label><input id="in-naver" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">⭐ 쿠팡</label><input id="in-coupang" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">⭐ 올리브영</label><input id="in-olive" type="number" placeholder="0"></div>
     </div>
     <div class="form-grid fg3">
       <div class="fg"><label class="fl">에이블리</label><input id="in-ably" type="number" placeholder="0"></div>
@@ -251,7 +265,7 @@ tr:hover td{background:var(--surface2)}
   </div>
 
   <div class="section card">
-    <div class="card-title">채널별 광고비 (원 단위)</div>
+    <div class="card-title">채널별 누적 광고비 (원)</div>
     <div class="form-grid fg3">
       <div class="fg"><label class="fl">네이버 광고비</label><input id="in-ad-naver" type="number" placeholder="0"></div>
       <div class="fg"><label class="fl">쿠팡 광고비</label><input id="in-ad-coupang" type="number" placeholder="0"></div>
@@ -263,17 +277,18 @@ tr:hover td{background:var(--surface2)}
     </div>
   </div>
 
-  <div class="section card">
-    <div class="card-title">월별 추이 — 최근 6개월 매출 (원)</div>
-    <div class="form-grid fg3">
-      <div class="fg"><label class="fl">6개월 전</label><input id="in-t6" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">5개월 전</label><input id="in-t5" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">4개월 전</label><input id="in-t4" type="number" placeholder="0"></div>
+  <!-- 주차별 누적 현황 미리보기 -->
+  <div class="section card" id="weekly-preview" style="display:none">
+    <div class="card-title">이번 달 주차별 누적 현황</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>주차</th><th class="num">누적 매출</th><th class="num">목표 대비</th><th class="num">누적 광고비</th><th class="num">ACoS</th><th>입력일</th></tr></thead>
+        <tbody id="weekly-tbody"></tbody>
+      </table>
     </div>
-    <div class="form-grid fg3">
-      <div class="fg"><label class="fl">3개월 전</label><input id="in-t3" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">2개월 전</label><input id="in-t2" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">이번 달</label><input id="in-t1" type="number" placeholder="0"></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:12px;font-size:12px;color:var(--muted)">
+      <span>월 예상 매출: <b id="proj-rev" style="color:var(--text)">—</b></span>
+      <span>목표 달성 예상: <b id="proj-ach" style="color:var(--text)">—</b></span>
     </div>
   </div>
 
@@ -560,27 +575,94 @@ function applyStateToUI(){
 }
 
 async function saveData(){
-  const data={
-    year:parseInt(document.getElementById('in-year').value),
-    month:parseInt(document.getElementById('in-month').value),
-    revenue:g('in-rev'), target:g('in-target'),
+  const year=parseInt(document.getElementById('in-year').value);
+  const month=parseInt(document.getElementById('in-month').value);
+  const week=parseInt(document.getElementById('in-week').value);
+  const revenue=g('in-rev');
+  const target=g('in-target');
+
+  // 주차별 누적 데이터 저장
+  const weekKey=`${year}_${String(month).padStart(2,'0')}_w${week}`;
+  const weekData={
+    year, month, week, weekKey,
+    revenue, target,
     prevMonth:g('in-prev-m'), prevYear:g('in-prev-y'),
     profit:g('in-profit'), adcost:g('in-ad'),
     channels:{naver:g('in-naver'),coupang:g('in-coupang'),olive:g('in-olive'),ably:g('in-ably'),zigzag:g('in-zigzag'),musinsa:g('in-musinsa'),export:g('in-export'),etc:g('in-etc')},
     adChannels:{naver:g('in-ad-naver'),coupang:g('in-ad-coupang'),olive:g('in-ad-olive'),meta:g('in-ad-meta'),etc:g('in-ad-etc')},
-    trend:[g('in-t6'),g('in-t5'),g('in-t4'),g('in-t3'),g('in-t2'),g('in-t1')],
     updatedAt:new Date().toLocaleString('ko-KR')
   };
+
+  // 현재 월의 모든 주차 데이터 업데이트
+  if(!S.weeklyData) S.weeklyData={};
+  S.weeklyData[weekKey]=weekData;
+
+  // 현재 상태 업데이트 (최신 주차 기준)
+  Object.assign(S,{
+    revenue:weekData.revenue, target:weekData.target,
+    prevMonth:weekData.prevMonth, prevYear:weekData.prevYear,
+    profit:weekData.profit, adcost:weekData.adcost,
+    channels:weekData.channels, adChannels:weekData.adChannels,
+    currentWeek:week, currentMonth:month, currentYear:year
+  });
+
+  const savePayload={...weekData, weeklyData:S.weeklyData};
+
   const st=document.getElementById('sync');
   st.textContent='저장 중...';st.className='sync';
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    Object.assign(S,data);
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(savePayload)});
     applyStateToUI();
-    st.textContent='✓ 저장됨 '+new Date().toLocaleTimeString('ko-KR');st.className='sync ok';
-    toast('✓ 구글 시트에 저장되었습니다!');
+    renderWeeklyPreview();
+    st.textContent=`✓ ${month}월 ${week}주차 저장됨 `+new Date().toLocaleTimeString('ko-KR');
+    st.className='sync ok';
+    toast(`✓ ${month}월 ${week}주차 데이터가 저장되었습니다!`);
     showPage('overview');
   }catch(e){st.textContent='저장 실패';st.className='sync err';toast('저장에 실패했습니다.');}
+}
+
+function renderWeeklyPreview(){
+  if(!S.weeklyData||!Object.keys(S.weeklyData).length)return;
+  const preview=document.getElementById('weekly-preview');
+  const tbody=document.getElementById('weekly-tbody');
+  const month=S.currentMonth||parseInt(document.getElementById('in-month').value);
+  const year=S.currentYear||parseInt(document.getElementById('in-year').value);
+  const target=S.target||0;
+
+  // 현재 월의 주차 데이터만 필터
+  const monthKeys=Object.keys(S.weeklyData).filter(k=>k.startsWith(`${year}_${String(month).padStart(2,'0')}`)).sort();
+  if(!monthKeys.length){preview.style.display='none';return;}
+
+  preview.style.display='block';
+  const weekLabels=['1주차 (1~7일)','2주차 (~14일)','3주차 (~21일)','4주차 (~28일)','월말 확정'];
+  tbody.innerHTML=monthKeys.map(k=>{
+    const d=S.weeklyData[k];
+    const w=d.week;
+    const ach=target?(d.revenue/target*100).toFixed(1)+'%':'—';
+    const acos=d.revenue?(d.adcost/d.revenue*100).toFixed(1)+'%':'—';
+    return`<tr>
+      <td>${weekLabels[w-1]||w+'주차'}</td>
+      <td class="num">${fmtM(d.revenue)}</td>
+      <td class="num">${ach}</td>
+      <td class="num">${fmtM(d.adcost)}</td>
+      <td class="num">${acos}</td>
+      <td style="font-size:11px;color:var(--hint)">${d.updatedAt||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // 월말 예상 매출 계산 (최신 주차 기준 일할 추정)
+  const latest=S.weeklyData[monthKeys[monthKeys.length-1]];
+  const latestWeek=latest.week;
+  if(latestWeek<5){
+    const daysElapsed=latestWeek*7;
+    const projRev=Math.round(latest.revenue/daysElapsed*30);
+    document.getElementById('proj-rev').textContent=fmtM(projRev);
+    const projAch=target?(projRev/target*100).toFixed(1)+'%':'—';
+    document.getElementById('proj-ach').textContent=projAch;
+  } else {
+    document.getElementById('proj-rev').textContent=fmtM(latest.revenue);
+    document.getElementById('proj-ach').textContent=target?(latest.revenue/target*100).toFixed(1)+'%':'—';
+  }
 }
 
 async function loadData(){
@@ -591,14 +673,23 @@ async function loadData(){
     const json=await res.json();
     if(json.status==='success'&&json.data){
       const d=json.data;
-      S={...S,...d,channels:{...S.channels,...d.channels},adChannels:{...S.adChannels,...d.adChannels}};
+      S={...S,...d,
+        channels:{...S.channels,...(d.channels||{})},
+        adChannels:{...S.adChannels,...(d.adChannels||{})},
+        weeklyData:{...S.weeklyData,...(d.weeklyData||{})}
+      };
+      // 입력폼에 최신값 채우기
       const flds=['rev','target','prev-m','prev-y','profit','ad'];
       const keys=['revenue','target','prevMonth','prevYear','profit','adcost'];
       flds.forEach((f,i)=>{const el=document.getElementById('in-'+f);if(el&&S[keys[i]])el.value=S[keys[i]];});
       ['naver','coupang','olive','ably','zigzag','musinsa','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
+      if(d.week){const el=document.getElementById('in-week');if(el)el.value=d.week;}
+      if(d.month){const el=document.getElementById('in-month');if(el)el.value=d.month;}
       applyStateToUI();
-      st.textContent='✓ 동기화됨 '+(d.updatedAt||'');st.className='sync ok';
-      document.getElementById('overview-sub').textContent='마지막 업데이트: '+(d.updatedAt||'');
+      renderWeeklyPreview();
+      const wk=d.week?` (${d.month}월 ${d.week}주차)`:'';
+      st.textContent=`✓ 동기화됨${wk} `+(d.updatedAt||'');st.className='sync ok';
+      document.getElementById('overview-sub').textContent='마지막 업데이트: '+(d.updatedAt||'')+(d.week?` · ${d.month}월 ${d.week}주차 기준`:'');
     }else{st.textContent='저장된 데이터 없음';st.className='sync';}
   }catch(e){st.textContent='불러오기 실패';st.className='sync err';}
 }
