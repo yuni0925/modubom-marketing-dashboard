@@ -368,7 +368,36 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzntuzpW9lH5xXxTBYjPoxSPbKjJb6iOqVxCvB00q3HLWVuARx2kUKfw-OMepxCXvhcDw/exec';
+const SUPABASE_URL = 'https://xgaipkyedtpmkzvecdsg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_F46W-blat1gYswaki0tNoA_I6pdP1hv';
+const TABLE = 'dashboard_data';
+
+async function dbSave(weekKey, data){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify({week_key: weekKey, data: JSON.stringify(data)})
+  });
+  if(!res.ok) throw new Error('save failed: '+res.status);
+}
+
+async function dbLoad(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?order=week_key.desc&limit=1`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  if(!res.ok) throw new Error('load failed: '+res.status);
+  const rows = await res.json();
+  if(!rows||rows.length===0) return null;
+  return JSON.parse(rows[0].data);
+}
 
 function showPreview(input){
   const v=parseFloat(input.value);
@@ -846,14 +875,14 @@ async function saveData(){
   const st=document.getElementById('sync');
   st.textContent='저장 중...';st.className='sync';
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(savePayload)});
+    await dbSave(weekKey, savePayload);
     applyStateToUI();
     renderWeeklyPreview();
     st.textContent=`✓ ${month}월 ${week}주차 저장됨 `+new Date().toLocaleTimeString('ko-KR');
     st.className='sync ok';
     toast(`✓ ${month}월 ${week}주차 데이터가 저장되었습니다!`);
     showPage('overview');
-  }catch(e){st.textContent='저장 실패';st.className='sync err';toast('저장에 실패했습니다.');}
+  }catch(e){console.error(e);st.textContent='저장 실패';st.className='sync err';toast('저장에 실패했습니다. 콘솔을 확인해주세요.');}
 }
 
 function renderWeeklyPreview(){
@@ -904,18 +933,11 @@ async function loadData(){
   const st=document.getElementById('sync');
   st.textContent='불러오는 중...';st.className='sync';
   try{
-    const res=await fetch(SHEET_URL+'?t='+Date.now(),{
-      method:'GET',
-      headers:{'Content-Type':'application/json'}
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const json=await res.json();
-    if(json.status==='success'&&json.data){
-      const d=json.data;
+    const d=await dbLoad();
+    if(d){
       S={...S,...d,
         channels:{...S.channels,...(d.channels||{})},
-        adChannels:{...S.adChannels,...(d.adChannels||{})},
-        weeklyData:{...S.weeklyData,...(d.weeklyData||{})}
+        adChannels:{...S.adChannels,...(d.adChannels||{})}
       };
       const flds=['rev','target','prev-m','prev-y','profit'];
       const keys=['revenue','target','prevMonth','prevYear','profit'];
@@ -936,8 +958,7 @@ async function loadData(){
     }
   }catch(e){
     console.error('loadData error:',e);
-    // CORS 이슈 시 저장된 데이터 없음으로 처리 (첫 사용 시 정상)
-    st.textContent='저장된 데이터 없음 (첫 사용 시 정상)';st.className='sync';
+    st.textContent='불러오기 실패';st.className='sync err';
   }
 }
 
