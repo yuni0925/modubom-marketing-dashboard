@@ -78,6 +78,9 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
 .tab{font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--border);cursor:pointer;color:var(--muted);background:transparent;transition:all .15s}
 .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.num-wrap{position:relative}
+.num-wrap input{padding-right:10px}
+.num-preview{font-size:11px;color:var(--green);font-weight:500;margin-top:3px;min-height:16px;letter-spacing:.01em}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{background:var(--surface2);padding:8px 10px;text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
@@ -228,7 +231,7 @@ tr:hover td{background:var(--surface2)}
           <option value="5">월말 확정 (전체 누적)</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">목표 매출 (원)</label><input id="in-target" type="number" placeholder="예: 110000000"></div>
+      <div class="fg"><label class="fl">목표 매출 (원)</label><div class="num-wrap"><input id="in-target" type="number" placeholder="예: 110000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-target"></div></div></div>
     </div>
     <div style="background:var(--amber-bg);border:1px solid #f5c584;border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--amber);margin-top:8px">
       💡 매주 <b>그 주까지의 누적 합계</b>를 입력하세요. 예: 2주차라면 1~14일 전체 누적값
@@ -238,41 +241,41 @@ tr:hover td{background:var(--surface2)}
   <div class="section card">
     <div class="card-title">누적 매출 데이터 (원 단위)</div>
     <div class="form-grid">
-      <div class="fg"><label class="fl">이번 달 누적 매출 (원)</label><input id="in-rev" type="number" placeholder="예: 42000000"></div>
-      <div class="fg"><label class="fl">전월 동기간 매출 (원)</label><input id="in-prev-m" type="number" placeholder="예: 55000000"></div>
-      <div class="fg"><label class="fl">전년 동월 매출 (원)</label><input id="in-prev-y" type="number" placeholder="예: 121146504"></div>
-      <div class="fg"><label class="fl">누적 매출 이익 (원)</label><input id="in-profit" type="number" placeholder="예: 18000000"></div>
+      <div class="fg"><label class="fl">이번 달 누적 매출 (원)</label><div class="num-wrap"><input id="in-rev" type="number" placeholder="예: 42000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-rev"></div></div></div>
+      <div class="fg"><label class="fl">전월 동기간 매출 (원)</label><div class="num-wrap"><input id="in-prev-m" type="number" placeholder="예: 55000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-prev-m"></div></div></div>
+      <div class="fg"><label class="fl">전년 동월 매출 (원)</label><div class="num-wrap"><input id="in-prev-y" type="number" placeholder="예: 121146504" oninput="showPreview(this)"><div class="num-preview" id="prev-in-prev-y"></div></div></div>
+      <div class="fg"><label class="fl">누적 매출 이익 (원)</label><div class="num-wrap"><input id="in-profit" type="number" placeholder="예: 18000000" oninput="showPreview(this)"><div class="num-preview" id="prev-in-profit"></div></div></div>
     </div>
   </div>
 
   <div class="section card">
     <div class="card-title">채널별 누적 매출 (원) — 주력 채널</div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">⭐ 네이버</label><input id="in-naver" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">⭐ 쿠팡</label><input id="in-coupang" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">⭐ 올리브영</label><input id="in-olive" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">⭐ 네이버</label><div class="num-wrap"><input id="in-naver" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-naver"></div></div></div>
+      <div class="fg"><label class="fl">⭐ 쿠팡</label><div class="num-wrap"><input id="in-coupang" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-coupang"></div></div></div>
+      <div class="fg"><label class="fl">⭐ 올리브영</label><div class="num-wrap"><input id="in-olive" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-olive"></div></div></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">에이블리</label><input id="in-ably" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">지그재그</label><input id="in-zigzag" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">무신사</label><input id="in-musinsa" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">에이블리</label><div class="num-wrap"><input id="in-ably" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-ably"></div></div></div>
+      <div class="fg"><label class="fl">지그재그</label><div class="num-wrap"><input id="in-zigzag" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-zigzag"></div></div></div>
+      <div class="fg"><label class="fl">무신사</label><div class="num-wrap"><input id="in-musinsa" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-musinsa"></div></div></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">해외 수출</label><input id="in-export" type="number" placeholder="0"></div>
-      <div class="fg"><label class="fl">공구/기타</label><input id="in-etc" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">해외 수출</label><div class="num-wrap"><input id="in-export" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-export"></div></div></div>
+      <div class="fg"><label class="fl">공구/기타</label><div class="num-wrap"><input id="in-etc" type="number" placeholder="0" oninput="showPreview(this)"><div class="num-preview" id="prev-in-etc"></div></div></div>
     </div>
   </div>
 
   <div class="section card">
     <div class="card-title">채널별 누적 광고비 (원) — 합계 자동 계산</div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">⭐ 네이버 광고비</label><input id="in-ad-naver" type="number" placeholder="0" oninput="calcAdTotal()"></div>
-      <div class="fg"><label class="fl">⭐ 쿠팡 광고비</label><input id="in-ad-coupang" type="number" placeholder="0" oninput="calcAdTotal()"></div>
-      <div class="fg"><label class="fl">⭐ 올리브영 광고비</label><input id="in-ad-olive" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg"><label class="fl">⭐ 네이버 광고비</label><div class="num-wrap"><input id="in-ad-naver" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-naver"></div></div></div>
+      <div class="fg"><label class="fl">⭐ 쿠팡 광고비</label><div class="num-wrap"><input id="in-ad-coupang" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-coupang"></div></div></div>
+      <div class="fg"><label class="fl">⭐ 올리브영 광고비</label><div class="num-wrap"><input id="in-ad-olive" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-olive"></div></div></div>
     </div>
     <div class="form-grid fg3">
-      <div class="fg"><label class="fl">메타/인플루언서</label><input id="in-ad-meta" type="number" placeholder="0" oninput="calcAdTotal()"></div>
-      <div class="fg"><label class="fl">기타 광고비</label><input id="in-ad-etc" type="number" placeholder="0" oninput="calcAdTotal()"></div>
+      <div class="fg"><label class="fl">메타/인플루언서</label><div class="num-wrap"><input id="in-ad-meta" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-meta"></div></div></div>
+      <div class="fg"><label class="fl">기타 광고비</label><div class="num-wrap"><input id="in-ad-etc" type="number" placeholder="0" oninput="showPreview(this);calcAdTotal()"><div class="num-preview" id="prev-in-ad-etc"></div></div></div>
       <div class="fg">
         <label class="fl" style="color:var(--green);font-weight:600">광고비 합계 (자동)</label>
         <div id="ad-total-display" style="background:var(--green-bg);border:1px solid #86c9a4;border-radius:var(--rs);padding:8px 10px;font-size:14px;font-weight:600;color:var(--green)">0원</div>
@@ -347,6 +350,20 @@ tr:hover td{background:var(--surface2)}
 
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzntuzpW9lH5xXxTBYjPoxSPbKjJb6iOqVxCvB00q3HLWVuARx2kUKfw-OMepxCXvhcDw/exec';
+
+function showPreview(input){
+  const v=parseFloat(input.value);
+  const el=document.getElementById('prev-'+input.id);
+  if(!el) return;
+  if(!input.value||isNaN(v)){el.textContent='';return;}
+  el.textContent=Math.round(v).toLocaleString('ko-KR')+'원';
+}
+
+function refreshAllPreviews(){
+  document.querySelectorAll('#page-input input[type="number"]').forEach(el=>{
+    if(el.value) showPreview(el);
+  });
+}
 
 function calcAdTotal(){
   const total=['in-ad-naver','in-ad-coupang','in-ad-olive','in-ad-meta','in-ad-etc'].reduce((s,id)=>s+(parseFloat(document.getElementById(id)?.value)||0),0);
@@ -705,6 +722,7 @@ async function loadData(){
       ['naver','coupang','olive','ably','zigzag','musinsa','export','etc'].forEach(k=>{const el=document.getElementById('in-'+k);if(el&&S.channels[k])el.value=S.channels[k];});
       ['naver','coupang','olive','meta','etc'].forEach(k=>{const el=document.getElementById('in-ad-'+k);if(el&&S.adChannels[k])el.value=S.adChannels[k];});
       calcAdTotal();
+      refreshAllPreviews();
       if(d.week){const el=document.getElementById('in-week');if(el)el.value=d.week;}
       if(d.month){const el=document.getElementById('in-month');if(el)el.value=d.month;}
       applyStateToUI();
