@@ -136,12 +136,11 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <div class="grid4">
     <div class="kpi"><div class="kpi-label">이번 달 매출</div><div class="kpi-value" id="ov-rev">—</div><div style="font-size:11px;color:var(--hint);margin-top:4px" id="ov-rev-target"></div></div>
     <div class="kpi"><div class="kpi-label">목표 달성률</div><div class="kpi-value" id="ov-ach">—</div><div class="prog-wrap"><div class="prog" id="prog-ach" style="width:0%;background:var(--green)"></div></div></div>
-    <div class="kpi"><div class="kpi-label">전월 대비</div><div class="kpi-value" id="ov-mom">—</div><div id="ov-mom-b"></div></div>
-    <div class="kpi"><div class="kpi-label">전년 동월 대비</div><div class="kpi-value" id="ov-yoy">—</div><div id="ov-yoy-b"></div></div>
+    <div class="kpi"><div class="kpi-label">전월 동기간 대비</div><div class="kpi-value" id="ov-mom">—</div><div id="ov-mom-b"></div></div>
+    <div class="kpi"><div class="kpi-label">전년 동기간 대비</div><div class="kpi-value" id="ov-yoy">—</div><div id="ov-yoy-b"></div></div>
     <div class="kpi"><div class="kpi-label">광고비 (ACoS)</div><div class="kpi-value" id="ov-acos">—</div><div id="ov-acos-b"></div></div>
     <div class="kpi"><div class="kpi-label">매출이익률</div><div class="kpi-value" id="ov-margin">—</div></div>
     <div class="kpi"><div class="kpi-label">영업이익</div><div class="kpi-value" id="ov-op">—</div><div id="ov-op-b"></div></div>
-    <div class="kpi"><div class="kpi-label">ROAS</div><div class="kpi-value" id="ov-roas">—</div><div style="font-size:11px;color:var(--hint);margin-top:4px" id="ov-roas-sub"></div></div>
   </div>
   <div class="section card">
     <div class="card-title">채널별 매출 요약</div>
@@ -214,6 +213,7 @@ let S = {
   profit:0, adcost:0,
   channels:{naver:0,coupang:0,olive:0,ably:0,zigzag:0,musinsa:0,'11st':0,gmarket:0,qten:0,amazon:0,export:0,etc:0},
   adChannels:{naver:0,coupang:0,olive:0,meta:0,influencer:0,amazon:0,tiktok:0,ably:0,zigzag:0,etc:0},
+  adRevChannels:{naver:0,coupang:0,olive:0,meta:0,amazon:0,tiktok:0,ably:0,zigzag:0},
   hist:{months:[],revenue:[],adcost:[],profit:[],target:[]}
 };
 
@@ -253,6 +253,90 @@ function showPage(name){
   if(name==='trend'){renderTrendDetail('monthly',document.querySelector('.tab.active'));}
 }
 
+// ── 2025년 일별 매출 데이터 (전년 동기간 비교용) ──
+const PREV_YEAR_DAILY = {
+  '2025_03_01':8510915,'2025_03_02':7230490,'2025_03_03':6095452,'2025_03_04':5446258,
+  '2025_03_05':5221646,'2025_03_06':4603755,'2025_03_07':8092005,'2025_03_08':2649002,
+  '2025_03_09':3411368,'2025_03_10':3408681,'2025_03_11':3333912,'2025_03_12':3132222,
+  '2025_03_13':3225872,'2025_03_14':2359392,'2025_03_15':3024106,'2025_03_16':2700301,
+  '2025_03_17':2690369,'2025_03_18':2581731,'2025_03_19':2908299,'2025_03_20':2936638,
+  '2025_03_21':2814836,'2025_03_22':3744995,'2025_03_23':3053961,'2025_03_24':3064964,
+  '2025_03_25':3000970,'2025_03_26':3091450,'2025_03_27':3159110,'2025_03_28':8934519,
+  '2025_03_29':2007009,'2025_03_30':2772030,'2025_03_31':3639847,
+  '2025_04_01':3840779,'2025_04_02':3802192,'2025_04_03':3434845,'2025_04_04':2788219,
+  '2025_04_05':3146752,'2025_04_06':3031311,'2025_04_07':3180123,'2025_04_08':3221120,
+  '2025_04_09':3623318,'2025_04_10':3766537,'2025_04_11':2732179,'2025_04_12':3303651,
+  '2025_04_13':3569331,'2025_04_14':3112109,'2025_04_15':3281968,'2025_04_16':2732946,
+  '2025_04_17':2864153,'2025_04_18':2631344,'2025_04_19':2646416,'2025_04_20':3183554,
+  '2025_04_21':3280138,'2025_04_22':3685663,'2025_04_23':5662442,'2025_04_24':3527549,
+  '2025_04_25':3920085,'2025_04_26':3501087,'2025_04_27':4599154,'2025_04_28':7657338,
+  '2025_04_29':3705360,'2025_04_30':4134463,
+  '2025_05_01':4388146,'2025_05_02':3749853,'2025_05_03':3645730,'2025_05_04':3606935,
+  '2025_05_05':3664097,'2025_05_06':3992106,'2025_05_07':4532040,'2025_05_08':5329388,
+  '2025_05_09':4175422,'2025_05_10':3794089,'2025_05_11':4239842,'2025_05_12':4184142,
+  '2025_05_13':4200481,'2025_05_14':4158340,'2025_05_15':3469720,'2025_05_16':3526114,
+  '2025_05_17':3220636,'2025_05_18':4143008,'2025_05_19':4549222,'2025_05_20':3538695,
+  '2025_05_21':3872605,'2025_05_22':4115643,'2025_05_23':2888794,'2025_05_24':2907995,
+  '2025_05_25':3654989,'2025_05_26':3243653,'2025_05_27':4422680,'2025_05_28':3299841,
+  '2025_05_29':4600443,'2025_05_30':2838613,'2025_05_31':5193242,
+  '2025_06_01':4590154,'2025_06_02':13212120,'2025_06_03':4205355,'2025_06_04':3335067,
+  '2025_06_05':3458467,'2025_06_06':6174313,'2025_06_07':2437009,'2025_06_08':2468542,
+  '2025_06_09':2455402,'2025_06_10':2929849,'2025_06_11':3396620,'2025_06_12':3517568,
+  '2025_06_13':2288608,'2025_06_14':2175847,'2025_06_15':2679819,'2025_06_16':2786329,
+  '2025_06_17':2994224,'2025_06_18':2439539,'2025_06_19':2415368,'2025_06_20':2228447,
+  '2025_06_21':2417367,'2025_06_22':3102630,'2025_06_23':2736083,'2025_06_24':2779229,
+  '2025_06_25':4118729,'2025_06_26':3760464,'2025_06_27':2803398,'2025_06_28':2456224,
+  '2025_06_29':2836501,'2025_06_30':2400949,
+  '2025_07_01':3782190,'2025_07_02':3240110,'2025_07_03':2485769,'2025_07_04':2431775,
+  '2025_07_05':2502157,'2025_07_06':2920621,'2025_07_07':2491673,'2025_07_08':2903705,
+  '2025_07_09':2647346,'2025_07_10':2679245,'2025_07_11':2643885,'2025_07_12':2207534,
+  '2025_07_13':2217202,'2025_07_14':2179689,'2025_07_15':2531438,'2025_07_16':2447953,
+  '2025_07_17':4359616,'2025_07_18':1992591,'2025_07_19':1746902,'2025_07_20':1984410,
+  '2025_07_21':10922305,'2025_07_22':2737997,'2025_07_23':3144025,'2025_07_24':3215558,
+  '2025_07_25':3504155,'2025_07_26':3239576,'2025_07_27':3571488,'2025_07_28':4729970,
+  '2025_07_29':2779090,'2025_07_30':2483319,'2025_07_31':2922710,
+  '2025_08_01':3290844,'2025_08_02':2333186,'2025_08_03':3050954,'2025_08_04':3494121,
+  '2025_08_05':2952729,'2025_08_06':2380586,'2025_08_07':2433381,'2025_08_08':2780905,
+  '2025_08_09':2182484,'2025_08_10':2478454,'2025_08_11':2746214,'2025_08_12':2399822,
+  '2025_08_13':3064239,'2025_08_14':2338064,'2025_08_15':2191360,'2025_08_16':2527904,
+  '2025_08_17':3316110,'2025_08_18':3070612,'2025_08_19':2202677,'2025_08_20':2189448,
+  '2025_08_21':3837410,'2025_08_22':3983578,'2025_08_23':2661708,'2025_08_24':3320210,
+  '2025_08_25':2709540,'2025_08_26':2536922,'2025_08_27':6002496,'2025_08_28':2476572,
+  '2025_08_29':4270578,'2025_08_30':3251696,'2025_08_31':4208271,
+  '2025_09_01':4002372,'2025_09_02':3804595,'2025_09_03':4391975,'2025_09_04':5155790,
+  '2025_09_05':2551252,'2025_09_06':2073553,'2025_09_07':2483145,'2025_09_08':3591570,
+  '2025_09_09':3316640,'2025_09_10':2738385,'2025_09_11':2793134,'2025_09_12':2995399,
+  '2025_09_13':2036792,'2025_09_14':2377663,'2025_09_15':5389183,'2025_09_16':3557944,
+  '2025_09_17':4150463,'2025_09_18':3483165,'2025_09_19':2402962,'2025_09_20':2051917,
+  '2025_09_21':16586562,'2025_09_22':5919302,'2025_09_23':5532265,'2025_09_24':3056681,
+  '2025_09_25':2675301,'2025_09_26':2394663,'2025_09_27':2317455,'2025_09_28':2107836,
+  '2025_09_29':3090867,'2025_09_30':6905997,
+  '2025_10_01':3263485,'2025_10_02':2515091,'2025_10_03':2507606,'2025_10_04':3622214,
+  '2025_10_05':2405698,'2025_10_06':2124270,'2025_10_07':2247658,'2025_10_08':2437585,
+  '2025_10_09':2534035,'2025_10_10':2280886,'2025_10_11':2612237,'2025_10_12':2614280,
+  '2025_10_13':8415034,'2025_10_14':3174390,'2025_10_15':2745413,'2025_10_16':2555713,
+  '2025_10_17':3176052,'2025_10_18':2986763,'2025_10_19':3022089,'2025_10_20':3188622,
+  '2025_10_21':2600934,'2025_10_22':2326209,'2025_10_23':2874798,'2025_10_24':4006785,
+  '2025_10_25':2328778,'2025_10_26':3674436,'2025_10_27':2720104,'2025_10_28':2548942,
+  '2025_10_29':3161707,'2025_10_30':3014501,'2025_10_31':4657496,
+  '2025_11_01':3436840,'2025_11_02':4796180,'2025_11_03':3693254,'2025_11_04':3945569,
+  '2025_11_05':3848424,'2025_11_06':5344487,'2025_11_07':3732256,'2025_11_08':3129742,
+  '2025_11_09':3534124,'2025_11_10':23293406,'2025_11_11':6863616,'2025_11_12':4122277,
+  '2025_11_13':4007973,'2025_11_14':4076280,'2025_11_15':3893536,'2025_11_16':4688968,
+  '2025_11_17':4069813,'2025_11_18':5521956,'2025_11_19':5512016,'2025_11_20':19944535,
+  '2025_11_21':3085575,'2025_11_22':2940140,'2025_11_23':3594878,'2025_11_24':3557145,
+  '2025_11_25':7293257,'2025_11_26':6683782,'2025_11_27':10319678,'2025_11_28':3749835,
+  '2025_11_29':3854815,'2025_11_30':7185803,
+  '2025_12_01':7320755,'2025_12_02':6405963,'2025_12_03':11307433,'2025_12_04':4888307,
+  '2025_12_05':4990506,'2025_12_06':7046181,'2025_12_07':3854732,'2025_12_08':13348329,
+  '2025_12_09':4295978,'2025_12_10':4429614,'2025_12_11':4653048,'2025_12_12':4166771,
+  '2025_12_13':3938726,'2025_12_14':4486756,'2025_12_15':13538732,'2025_12_16':3695332,
+  '2025_12_17':3978137,'2025_12_18':3512005,'2025_12_19':3812541,'2025_12_20':2455354,
+  '2025_12_21':3262787,'2025_12_22':6345305,'2025_12_23':4870234,'2025_12_24':3235103,
+  '2025_12_25':3185596,'2025_12_26':6824351,'2025_12_27':3249111,'2025_12_28':3894150,
+  '2025_12_29':3393465,'2025_12_30':3588783,'2025_12_31':3189473
+};
+
 // ── 엑셀 파싱 ──
 async function handleFile(file){
   if(!file) return;
@@ -264,9 +348,10 @@ async function handleFile(file){
 
     // 1. 전체 종합 → 월별 히스토리
     parseHistFromSummary(wb);
-    // 2. 채널별 일 매출 → 이번 달 채널별 매출 (월별 합계행)
+    // 2. 채널별 일 매출 → 채널별 매출 + 전월 동기간 계산
     parseChannelSales(wb);
-    // 3. 채널별 광고 → 채널별 광고비
+    calcPrevMonthSamePeriod(wb);
+    // 3. 채널별 광고 → 채널별 광고비 + ROAS
     parseAdCost(wb);
 
     // 화면 업데이트
@@ -303,7 +388,7 @@ async function handleFile(file){
     status.textContent='✅ 파싱 완료!';status.style.color='var(--green)';
     document.getElementById('file-badge').textContent='📄 '+file.name;
     document.getElementById('file-badge').className='file-badge loaded';
-    document.getElementById('overview-sub').textContent=`${S.year}년 ${S.month}월 기준 · ${file.name}`;
+    document.getElementById('overview-sub').textContent=`${S.year}년 ${S.month}월 · ${file.name}`;
     toast('✅ 데이터 분석 완료! 전체 현황을 확인하세요.');
     showPage('overview');
   }catch(e){
@@ -316,13 +401,10 @@ function parseHistFromSummary(wb){
   const ws = wb.Sheets['전체 종합'];
   if(!ws) return;
   const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-  // 행4(idx3)=연도, 행5(idx4)=월, 행7(idx6)=매출액, 행8(idx7)=매출이익, 행10(idx9)=광고비
-  // 2024=col2, 2025=col15, 2026=col28
   const yearCols = {2024:2,2025:15,2026:28};
   const months=[],revenue=[],adcost=[],profit=[],target=[];
-  let latestYear=null,latestMonth=null,latestRev=0;
+  let latestYear=null,latestMonth=null;
 
-  // 목표 매출 (행3, idx2)
   const targetRow = rows[2]||[];
   const targetMap={};
   [2024,2025,2026].forEach(yr=>{
@@ -348,23 +430,63 @@ function parseHistFromSummary(wb){
         profit.push(typeof prof==='number'?prof:0);
         adcost.push(typeof ad==='number'?ad:0);
         target.push(targetMap[`${yr}_${m+1}`]||0);
-        latestYear=yr;latestMonth=m+1;latestRev=rev;
+        latestYear=yr;latestMonth=m+1;
       }
     }
   });
 
   S.hist={months,revenue,adcost,profit,target};
-  // 이번 달 값
   const last=months.length-1;
   S.year=latestYear; S.month=latestMonth;
   S.revenue=revenue[last]||0;
   S.profit=profit[last]||0;
   S.adcost=adcost[last]||0;
   S.target=target[last]||0;
-  S.prevMonth=revenue[last-1]||0;
+
   // 전년 동월
   const prevYearIdx=months.indexOf(`${String(latestYear-1).slice(2)}.${String(latestMonth).padStart(2,'0')}`);
   S.prevYear=prevYearIdx>=0?revenue[prevYearIdx]:0;
+
+  // 전월 동기간: 일별 데이터로 계산
+  S.prevMonth=0; // parseChannelSales 이후 별도 계산
+  S._latestYear=latestYear;
+  S._latestMonth=latestMonth;
+}
+
+function calcPrevMonthSamePeriod(wb){
+  const ws = wb.Sheets['채널별 일 매출'];
+  if(!ws) return;
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+  const yr=S._latestYear; const mo=S._latestMonth;
+
+  // 이번 달 최대 일자 찾기
+  let maxDay=0;
+  rows.forEach(row=>{
+    if(row[2]===yr&&row[3]===mo&&typeof row[4]==='number') maxDay=Math.max(maxDay,row[4]);
+  });
+  if(!maxDay) return;
+
+  // 전월 1~maxDay 누적 매출
+  const prevYr=mo===1?yr-1:yr;
+  const prevMo=mo===1?12:mo-1;
+  let prevMonthTotal=0;
+  rows.forEach((row,i)=>{
+    if(row[2]!==prevYr||row[3]!==prevMo||typeof row[4]!=='number') return;
+    if(row[4]>maxDay) return;
+    const prev=rows[i-1];
+    if(prev&&prev[9]==='전체'&&typeof row[9]==='number') prevMonthTotal+=row[9];
+  });
+
+  // 전년 동월 1~maxDay 누적 매출 (내장 데이터 사용)
+  let prevYearTotal=0;
+  for(let d=1;d<=maxDay;d++){
+    const key=`${yr-1}_${String(mo).padStart(2,'0')}_${String(d).padStart(2,'0')}`;
+    if(PREV_YEAR_DAILY[key]) prevYearTotal+=PREV_YEAR_DAILY[key];
+  }
+
+  S.prevMonth=prevMonthTotal;
+  S.prevYear=prevYearTotal;
+  S._maxDay=maxDay;
 }
 
 function parseChannelSales(wb){
@@ -395,8 +517,10 @@ function parseAdCost(wb){
   if(!ws) return;
   const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
   const ad={naver:0,coupang:0,olive:0,meta:0,influencer:0,amazon:0,tiktok:0,ably:0,zigzag:0,etc:0};
+  const adRev={naver:0,coupang:0,olive:0,meta:0,amazon:0,tiktok:0,ably:0,zigzag:0};
   rows.forEach(row=>{
     if(row[4]!==S.year||row[5]!==S.month)return;
+    // 광고비: col6~15
     ad.meta=row[6]||0;
     ad.naver=(row[7]||0)+(row[8]||0);
     ad.olive=row[9]||0;
@@ -406,13 +530,23 @@ function parseAdCost(wb){
     ad.ably=row[13]||0;
     ad.zigzag=row[14]||0;
     ad.etc=row[15]||0;
+    // 광고 기여 매출: col20~28
+    adRev.meta=row[20]||0;
+    adRev.naver=(row[21]||0)+(row[22]||0);
+    adRev.olive=row[23]||0;
+    adRev.coupang=row[24]||0;
+    adRev.amazon=row[25]||0;
+    adRev.tiktok=row[26]||0;
+    adRev.ably=row[27]||0;
+    adRev.zigzag=row[28]||0;
   });
   S.adChannels=ad;
+  S.adRevChannels=adRev;
 }
 
 // ── 화면 업데이트 ──
 function updateOverview(){
-  const{revenue,target,prevMonth,prevYear,profit,adcost}=S;
+  const{revenue,target,prevMonth,prevYear,profit,adcost,year,month}=S;
   document.getElementById('ov-rev').textContent=fmtM(revenue);
   document.getElementById('ov-rev-target').textContent=target?'목표 '+fmtM(target):'';
   const ach=target&&revenue?revenue/target:0;
@@ -420,9 +554,12 @@ function updateOverview(){
   const pa=document.getElementById('prog-ach');
   pa.style.width=Math.min(ach*100,100)+'%';
   pa.style.background=ach>=1?'var(--green)':ach>=.7?'var(--amber)':'var(--red)';
+
+  // 전월 동기간 대비
   const mom=prevMonth&&revenue?(revenue-prevMonth)/prevMonth:null;
   document.getElementById('ov-mom').textContent=mom!==null?(mom>0?'+':'')+(mom*100).toFixed(1)+'%':'—';
   document.getElementById('ov-mom-b').innerHTML=mom!==null?bdg(mom):'';
+
   const yoy=prevYear&&revenue?(revenue-prevYear)/prevYear:null;
   document.getElementById('ov-yoy').textContent=yoy!==null?(yoy>0?'+':'')+(yoy*100).toFixed(1)+'%':'—';
   document.getElementById('ov-yoy-b').innerHTML=yoy!==null?bdg(yoy):'';
@@ -435,9 +572,7 @@ function updateOverview(){
   const op=profit&&adcost?profit-adcost:null;
   document.getElementById('ov-op').textContent=op!==null?fmtM(op):'—';
   document.getElementById('ov-op-b').innerHTML=op!==null?`<div class="badge ${op>0?'bg':'br'}">${op>0?'흑자':'적자'}</div>`:'';
-  const roas=adcost&&revenue?revenue/adcost:null;
-  document.getElementById('ov-roas').textContent=roas!==null?roas.toFixed(1)+'x':'—';
-  document.getElementById('ov-roas-sub').textContent=roas!==null?(roas>=4?'우수':roas>=2?'보통':'개선필요'):'';
+
   // 채널 요약
   const ch=S.channels;
   const total=Object.values(ch).reduce((a,b)=>a+b,0);
@@ -459,16 +594,58 @@ function updateOverview(){
 }
 
 function renderTrend(){
-  const{months,revenue,target}=S.hist;
+  const{months,revenue}=S.hist;
   if(!months.length)return;
   if(trendChart)trendChart.destroy();
+
+  // 2025년 데이터 (1~12월 월별 합계 - PREV_YEAR_DAILY에서 계산)
+  const months2025=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const monthLabels2025=months2025.map(m=>`25.${m}`);
+  // 전체 종합에서 이미 S.hist에 2025 포함되어 있음
+  const rev2025=months2025.map(m=>{
+    const idx=months.indexOf(`25.${m}`);
+    return idx>=0?revenue[idx]:null;
+  });
+
+  // 2026년 데이터
+  const months2026=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const rev2026=months2026.map(m=>{
+    const idx=months.indexOf(`26.${m}`);
+    return idx>=0?revenue[idx]:null;
+  });
+  // x축은 월(1~12월)로 통일
+  const xLabels=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
   trendChart=new Chart(document.getElementById('trendChart'),{
     type:'line',
-    data:{labels:months.slice(-12),datasets:[
-      {label:'매출',data:revenue.slice(-12),borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.05)',tension:.4,pointRadius:3,fill:true,borderWidth:2}
+    data:{labels:xLabels,datasets:[
+      {
+        label:'2025년',data:rev2025,
+        borderColor:'rgba(180,180,180,0.6)',
+        backgroundColor:'rgba(180,180,180,0.05)',
+        tension:.4,pointRadius:2,fill:false,borderWidth:1.5,
+        borderDash:[4,3],pointBackgroundColor:'rgba(180,180,180,0.6)'
+      },
+      {
+        label:'2026년',data:rev2026,
+        borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.06)',
+        tension:.4,pointRadius:4,fill:true,borderWidth:2.5,
+        pointBackgroundColor:'#1a1917'
+      }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          display:true,position:'top',
+          labels:{font:{size:11},boxWidth:20,usePointStyle:true}
+        }
+      },
+      scales:{
+        y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
   });
 }
 
@@ -499,19 +676,25 @@ function renderChPie(){
     data:{labels:keys.map(k=>(CH_INFO[k]||{label:k}).label),datasets:[{data:keys.map(k=>ch[k]),backgroundColor:keys.map(k=>(CH_INFO[k]||{color:'#aaa'}).color),borderWidth:2,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10}}}}
   });
-  // 광고비 리스트
+  // 광고비 리스트 (ACoS + ROAS)
   const ad=S.adChannels;
+  const adRev=S.adRevChannels||{};
   const adEl=document.getElementById('ch-ad-list');
   const adTotal=Object.values(ad).reduce((a,b)=>a+b,0);
   if(!adTotal){adEl.innerHTML='<div style="color:var(--hint);font-size:13px">광고비 데이터가 없습니다.</div>';return;}
   adEl.innerHTML=Object.entries(ad).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a).map(([k,v])=>{
     const label=(AD_INFO[k]||{label:k}).label;
     const chRev=S.channels[k]||0;
-    const acos=chRev?(v/chRev*100).toFixed(1)+'%':'—';
+    const adRevVal=adRev[k]||0;
+    const acos=chRev?(v/chRev*100).toFixed(1):null;
+    const roas=v&&adRevVal?(adRevVal/v).toFixed(1):null;
     return`<div class="ch-row">
       <div class="ch-name">${label}</div>
       <div style="flex:1;font-size:12px;color:var(--muted)">${fmtM(v)}</div>
-      <div class="badge ${parseFloat(acos)<25?'bg':'br'}" style="font-size:10px">ACoS ${acos}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        ${acos!==null?`<div class="badge ${parseFloat(acos)<25?'bg':'br'}" style="font-size:10px">ACoS ${acos}%</div>`:'<div class="badge bn" style="font-size:10px">ACoS —</div>'}
+        ${roas!==null?`<div class="badge bb" style="font-size:10px">ROAS ${roas}x</div>`:''}
+      </div>
     </div>`;
   }).join('');
 }
