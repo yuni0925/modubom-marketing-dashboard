@@ -103,8 +103,6 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <button class="nav-item" onclick="showPage('trend')">📉 추이 분석</button>
   <div class="nav-label">관리</div>
   <button class="nav-item" onclick="showPage('upload')">📂 파일 업로드</button>
-  <button class="nav-item" onclick="showPage('insight')">🤖 AI 인사이트</button>
-  <button class="nav-item" onclick="showPage('report')">📝 발표 초안</button>
 </nav>
 
 <main class="main">
@@ -204,48 +202,6 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   </div>
 </div>
 
-<!-- AI 인사이트 -->
-<div class="page" id="page-insight">
-  <div class="page-title">AI 인사이트</div>
-  <div class="page-sub">업로드된 데이터를 AI가 분석하여 인사이트와 전략을 제안합니다.</div>
-  <div class="section card">
-    <div class="card-title">API 키 설정</div>
-    <div style="background:var(--amber-bg);border:1px solid #f5c584;border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:12px">
-      AI 기능은 Anthropic API 키가 필요합니다. console.anthropic.com에서 발급받을 수 있어요.
-    </div>
-    <div style="display:flex;gap:8px;align-items:flex-end">
-      <div class="fg" style="flex:1"><label class="fl">Anthropic API Key</label><input type="password" id="api-key" placeholder="sk-ant-..."></div>
-      <button class="btn" onclick="saveKey()">저장</button>
-    </div>
-    <div id="key-status" style="font-size:12px;color:var(--hint);margin-top:6px"></div>
-  </div>
-  <div class="section card">
-    <button class="btn btn-p btn-full" style="margin-bottom:12px" onclick="genInsight()">🤖 AI 분석 실행</button>
-    <div class="ai-box" id="ai-insight"><span class="ai-hint">파일을 업로드한 후 분석을 실행하세요.</span></div>
-  </div>
-</div>
-
-<!-- 발표 초안 -->
-<div class="page" id="page-report">
-  <div class="page-title">주간회의 발표 초안</div>
-  <div class="page-sub">업로드된 데이터를 바탕으로 주간회의 발표 스크립트를 자동 생성합니다.</div>
-  <div class="section card">
-    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <div class="fg" style="flex:1"><label class="fl">발표 스타일</label>
-        <select id="rpt-style"><option value="concise">간결형 (5분)</option><option value="detailed">상세형 (10~15분)</option></select></div>
-      <div class="fg" style="flex:1"><label class="fl">강조 포인트</label>
-        <select id="rpt-focus"><option value="balanced">균형잡힌 분석</option><option value="recovery">회복 전략 중심</option><option value="growth">성장 기회 중심</option></select></div>
-    </div>
-    <button class="btn btn-p btn-full" onclick="genReport()">📝 발표 초안 생성</button>
-  </div>
-  <div class="section card" id="rpt-card" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="card-title" style="margin-bottom:0">생성된 발표 초안</div>
-      <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('ai-report').textContent).then(()=>toast('복사됐어요!'))">복사</button>
-    </div>
-    <div class="ai-box" id="ai-report"></div>
-  </div>
-</div>
 
 </main>
 </div>
@@ -610,71 +566,6 @@ function renderTrendTable(){
 }
 
 function switchTrendTab(type,btn){renderTrendDetail(type,btn);}
-
-// ── AI ──
-function saveKey(){const k=document.getElementById('api-key').value.trim();if(k){localStorage.setItem('ak',k);document.getElementById('key-status').textContent='✓ 저장됨';}}
-function getKey(){return document.getElementById('api-key').value.trim()||localStorage.getItem('ak')||'';}
-
-async function callAI(prompt){
-  const key=getKey();
-  if(!key)return'⚠ API 키를 먼저 입력해주세요.';
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
-  const data=await res.json();
-  if(data.error)return'오류: '+data.error.message;
-  return data.content?.map(c=>c.text||'').join('')||'응답 없음';
-}
-
-async function genInsight(){
-  const el=document.getElementById('ai-insight');
-  if(!S.revenue){el.innerHTML='<span class="ai-hint">먼저 파일을 업로드해주세요.</span>';return;}
-  el.innerHTML='<span class="ai-hint">분석 중...</span>';
-  const{revenue,target,prevMonth,prevYear,profit,adcost,channels,year,month}=S;
-  const ch=channels;
-  const total=Object.values(ch).reduce((a,b)=>a+b,0);
-  const chText=Object.entries(ch).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a).slice(0,5)
-    .map(([k,v])=>`${(CH_INFO[k]||{label:k}).label} ${(v/10000).toFixed(0)}만`).join(', ');
-  el.textContent=await callAI(`이커머스 마케팅 전문가로서 모두봄(헤어케어 브랜드) ${year}년 ${month}월 데이터를 분석해주세요.
-
-데이터:
-- 매출: ${(revenue/10000).toFixed(0)}만원 / 목표: ${(target/10000).toFixed(0)}만원 (달성률 ${target?(revenue/target*100).toFixed(1):'-'}%)
-- 전월 대비: ${prevMonth?((revenue-prevMonth)/prevMonth*100).toFixed(1)+'%':'미입력'}
-- 전년 동월 대비: ${prevYear?((revenue-prevYear)/prevYear*100).toFixed(1)+'%':'미입력'}
-- ACoS: ${revenue?(adcost/revenue*100).toFixed(1)+'%':'—'} (목표 25% 미만)
-- 매출이익률: ${revenue?(profit/revenue*100).toFixed(1)+'%':'—'}
-- 주력 채널: ${chText}
-
-형식:
-【현황 요약】
-【채널별 분석 (네이버/쿠팡/올리브영 중심)】
-【문제점 및 기회】
-【이번 달 액션 플랜 3가지】`);
-}
-
-async function genReport(){
-  const el=document.getElementById('ai-report');
-  const card=document.getElementById('rpt-card');
-  if(!S.revenue){alert('먼저 파일을 업로드해주세요.');return;}
-  card.style.display='block';el.innerHTML='<span class="ai-hint">작성 중...</span>';
-  const{revenue,target,prevMonth,adcost,profit,year,month}=S;
-  const style=document.getElementById('rpt-style').value;
-  const focus=document.getElementById('rpt-focus').value;
-  const mom=prevMonth?((revenue-prevMonth)/prevMonth*100).toFixed(1):null;
-  const ach=target?(revenue/target*100).toFixed(1):null;
-  const acos=revenue?(adcost/revenue*100).toFixed(1):null;
-  el.textContent=await callAI(`모두봄 마케팅 담당자로서 ${year}년 ${month}월 주간회의 발표 스크립트를 작성하세요.
-
-조건: ${style==='concise'?'간결형 5분':'상세형 10~15분'} / ${focus==='recovery'?'회복전략 중심':focus==='growth'?'성장기회 중심':'균형분석'}
-- 숫자 기반, 가설과 이유 포함
-- 주력 채널(네이버/쿠팡/올리브영) 언급
-- 광고비 25% 기준 언급
-- 자연스러운 말투
-
-데이터:
-- 매출: ${(revenue/10000).toFixed(0)}만원${ach?' (달성률 '+ach+'%)':''}
-- 전월 대비: ${mom?mom+'%':'—'}
-- ACoS: ${acos?acos+'%':'—'}
-- 채널: 네이버 ${(S.channels.naver/10000).toFixed(0)}만 / 쿠팡 ${(S.channels.coupang/10000).toFixed(0)}만 / 올리브영 ${(S.channels.olive/10000).toFixed(0)}만`);
-}
 
 // 초기화
 window.addEventListener('load',()=>{
