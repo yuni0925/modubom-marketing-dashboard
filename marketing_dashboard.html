@@ -45,6 +45,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 .br{background:var(--red-bg);color:var(--red)}
 .ba{background:var(--amber-bg);color:var(--amber)}
 .bn{background:var(--surface2);color:var(--muted)}
+.bb{background:var(--blue-bg);color:var(--blue)}
 .prog-wrap{background:var(--surface2);border-radius:999px;height:5px;margin-top:7px;overflow:hidden}
 .prog{height:5px;border-radius:999px;transition:width .5s}
 .ch-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
@@ -100,6 +101,7 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <div class="nav-label">현황</div>
   <button class="nav-item active" onclick="showPage('overview')">📈 전체 현황</button>
   <button class="nav-item" onclick="showPage('channel')">🗂 채널별 분석</button>
+  <button class="nav-item" onclick="showPage('adperf')">📢 채널별 광고 현황</button>
   <button class="nav-item" onclick="showPage('trend')">📉 추이 분석</button>
   <div class="nav-label">관리</div>
   <button class="nav-item" onclick="showPage('upload')">📂 파일 업로드</button>
@@ -135,12 +137,10 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <div class="page-sub" id="overview-sub">파일을 업로드하면 현황이 표시됩니다.</div>
   <div class="grid4">
     <div class="kpi"><div class="kpi-label">이번 달 매출</div><div class="kpi-value" id="ov-rev">—</div><div style="font-size:11px;color:var(--hint);margin-top:4px" id="ov-rev-target"></div></div>
-    <div class="kpi"><div class="kpi-label">목표 달성률</div><div class="kpi-value" id="ov-ach">—</div><div class="prog-wrap"><div class="prog" id="prog-ach" style="width:0%;background:var(--green)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">목표 달성률</div><div class="kpi-value" id="ov-ach">—</div><div class="prog-wrap"><div class="prog" id="prog-ach" style="width:0%;background:var(--green)"></div></div><div style="font-size:11px;color:var(--hint);margin-top:4px" id="ov-forecast"></div></div>
     <div class="kpi"><div class="kpi-label">전월 동기간 대비</div><div class="kpi-value" id="ov-mom">—</div><div id="ov-mom-b"></div></div>
     <div class="kpi"><div class="kpi-label">전년 동기간 대비</div><div class="kpi-value" id="ov-yoy">—</div><div id="ov-yoy-b"></div></div>
     <div class="kpi"><div class="kpi-label">광고비 (ACoS)</div><div class="kpi-value" id="ov-acos">—</div><div id="ov-acos-b"></div></div>
-    <div class="kpi"><div class="kpi-label">매출이익률</div><div class="kpi-value" id="ov-margin">—</div></div>
-    <div class="kpi"><div class="kpi-label">영업이익</div><div class="kpi-value" id="ov-op">—</div><div id="ov-op-b"></div></div>
   </div>
   <div class="section card">
     <div class="card-title">채널별 매출 요약</div>
@@ -160,15 +160,9 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
     <div class="card-title">채널별 매출 비중</div>
     <div id="ch-list"><div class="empty">파일을 업로드해주세요.</div></div>
   </div>
-  <div class="grid2 section">
-    <div class="card">
-      <div class="card-title">채널별 매출 차트</div>
-      <div style="position:relative;height:220px"><canvas id="chPieChart" role="img" aria-label="채널별 매출">채널별 매출</canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">채널별 광고비 현황</div>
-      <div id="ch-ad-list"><div style="color:var(--hint);font-size:13px">파일을 업로드해주세요.</div></div>
-    </div>
+  <div class="section card">
+    <div class="card-title">채널별 매출 차트</div>
+    <div style="position:relative;height:260px"><canvas id="chPieChart" role="img" aria-label="채널별 매출">채널별 매출</canvas></div>
   </div>
   <div class="section card">
     <div class="card-title">채널별 상세 테이블</div>
@@ -201,6 +195,46 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   </div>
 </div>
 
+<!-- 채널별 광고 현황 -->
+<div class="page" id="page-adperf">
+  <div class="page-title">채널별 광고 현황</div>
+  <div class="page-sub">주차별 광고비, 매출, ROAS/ACoS 현황을 채널별로 분석합니다.</div>
+
+  <div class="section card">
+    <div class="card-title" id="adperf-lastweek-title">지난주 채널별 광고 현황</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>채널</th><th class="num">광고비</th><th class="num">매출</th><th class="num">ROAS</th><th class="num">ACoS</th></tr></thead>
+      <tbody id="adperf-lastweek-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title" id="adperf-mtd-title">이번 달 누적 채널별 광고 현황</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>채널</th><th class="num">광고비</th><th class="num">매출</th><th class="num">ROAS</th><th class="num">ACoS</th></tr></thead>
+      <tbody id="adperf-mtd-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <div class="section card">
+    <div class="tab-row" id="adperf-tabs"></div>
+    <div class="card-title" id="adperf-trend-title">채널별 광고비 추이</div>
+    <div style="position:relative;height:240px"><canvas id="adperfChart" role="img" aria-label="채널별 광고 추이">광고 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">회색 점선: 2025년 동기간 · 진한 선: 2026년</div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title" id="adperf-roas-trend-title">채널별 ROAS 추이</div>
+    <div style="position:relative;height:240px"><canvas id="adperfRoasChart" role="img" aria-label="채널별 ROAS 추이">ROAS 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">회색 점선: 2025년 동기간 · 진한 선: 2026년</div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title" id="adperf-acos-trend-title">채널별 ACoS 추이</div>
+    <div style="position:relative;height:240px"><canvas id="adperfAcosChart" role="img" aria-label="채널별 ACoS 추이">ACoS 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">회색 점선: 2025년 동기간 · 진한 선: 2026년 · 낮을수록 효율적</div>
+  </div>
+</div>
 
 </main>
 </div>
@@ -217,7 +251,8 @@ let S = {
   hist:{months:[],revenue:[],adcost:[],profit:[],target:[]}
 };
 
-let trendChart=null, chPieChart=null, trendDetailChart=null;
+let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null;
+let adPerfSelectedChannel='naverSa';
 
 // 채널 메타
 const CH_INFO = {
@@ -244,12 +279,12 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const idx=['upload','overview','channel','trend','insight','report'].indexOf(name);
-  // sidebar order: overview, channel, trend, upload, insight, report
-  const sidebarMap={overview:0,channel:1,trend:2,upload:3,insight:4,report:5};
+  // sidebar order: overview, channel, adperf, trend, upload
+  const sidebarMap={overview:0,channel:1,adperf:2,trend:3,upload:4};
   const si=sidebarMap[name];
   if(si!==undefined) document.querySelectorAll('.nav-item')[si]?.classList.add('active');
   if(name==='channel'){renderChPie();}
+  if(name==='adperf'){renderAdPerf();}
   if(name==='trend'){renderTrendDetail('monthly',document.querySelector('.tab.active'));}
 }
 
@@ -337,6 +372,53 @@ const PREV_YEAR_DAILY = {
   '2025_12_29':3393465,'2025_12_30':3588783,'2025_12_31':3189473
 };
 
+// ── 2025년 주차별 광고 데이터 (전년 동기간 비교용) ──
+// 채널: meta, naverGfa, naverSa, olive, coupangCpc, coupangNew, ably, zigzag (각 _ad=광고비, _rev=매출)
+const PREV_YEAR_AD_WEEKLY = [
+{"date":"2025-01-31","year":2025,"month":1,"week":"5주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":240110,"naverGfa_rev":405300,"naverSa_ad":1413533,"naverSa_rev":4387500,"olive_ad":0,"olive_rev":23018800,"coupangCpc_ad":3639762,"coupangCpc_rev":17117940,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":1620000,"ably_rev":4333900,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-02-28","year":2025,"month":2,"week":"9주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":199032,"naverGfa_rev":358900,"naverSa_ad":872718,"naverSa_rev":3556700,"olive_ad":2114490,"olive_rev":4644800,"coupangCpc_ad":2699594,"coupangCpc_rev":11833010,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":1179789,"ably_rev":2627600,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-03-01","year":2025,"month":3,"week":"10주차","meta_ad":135398,"meta_rev":0,"naverGfa_ad":54483,"naverGfa_rev":112800,"naverSa_ad":497853,"naverSa_rev":984920,"olive_ad":1342690,"olive_rev":9749400,"coupangCpc_ad":930577,"coupangCpc_rev":6050340,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":350000,"ably_rev":857900,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-03-08","year":2025,"month":3,"week":"11주차","meta_ad":364605,"meta_rev":67600,"naverGfa_ad":52511,"naverGfa_rev":97400,"naverSa_ad":460702,"naverSa_rev":1419800,"olive_ad":721790,"olive_rev":1400000,"coupangCpc_ad":1325188,"coupangCpc_rev":4801020,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":350000,"ably_rev":605600,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-03-15","year":2025,"month":3,"week":"12주차","meta_ad":227384,"meta_rev":0,"naverGfa_ad":54290,"naverGfa_rev":131200,"naverSa_ad":474221,"naverSa_rev":1066710,"olive_ad":350920,"olive_rev":1340000,"coupangCpc_ad":1419137,"coupangCpc_rev":3937350,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":350000,"ably_rev":531000,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-03-22","year":2025,"month":3,"week":"13주차","meta_ad":692941,"meta_rev":0,"naverGfa_ad":78125,"naverGfa_rev":150100,"naverSa_ad":613074,"naverSa_rev":1340660,"olive_ad":494550,"olive_rev":1545600,"coupangCpc_ad":1867292,"coupangCpc_rev":8173700,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":440000,"ably_rev":984900,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-04-01","year":2025,"month":4,"week":"14주차","meta_ad":314476,"meta_rev":16900,"naverGfa_ad":52520,"naverGfa_rev":61200,"naverSa_ad":400279,"naverSa_rev":1371810,"olive_ad":436730,"olive_rev":2111000,"coupangCpc_ad":1344799,"coupangCpc_rev":7173730,"coupangNew_ad":0,"coupangNew_rev":0,"ably_ad":280000,"ably_rev":689000,"zigzag_ad":149186,"zigzag_rev":103400},
+{"date":"2025-04-08","year":2025,"month":4,"week":"15주차","meta_ad":194240,"meta_rev":135200,"naverGfa_ad":50845,"naverGfa_rev":169000,"naverSa_ad":439054,"naverSa_rev":1366710,"olive_ad":437820,"olive_rev":2904100,"coupangCpc_ad":1386291,"coupangCpc_rev":6774480,"coupangNew_ad":208393,"coupangNew_rev":885260,"ably_ad":212774,"ably_rev":514100,"zigzag_ad":208594,"zigzag_rev":347900},
+{"date":"2025-04-15","year":2025,"month":4,"week":"16주차","meta_ad":211186,"meta_rev":33800,"naverGfa_ad":50347,"naverGfa_rev":65600,"naverSa_ad":445038,"naverSa_rev":794120,"olive_ad":436870,"olive_rev":3102600,"coupangCpc_ad":1309016,"coupangCpc_rev":5494100,"coupangNew_ad":549803,"coupangNew_rev":1582446,"ably_ad":210000,"ably_rev":506900,"zigzag_ad":210092,"zigzag_rev":314200},
+{"date":"2025-04-22","year":2025,"month":4,"week":"17주차","meta_ad":269744,"meta_rev":83620,"naverGfa_ad":63252,"naverGfa_rev":197610,"naverSa_ad":518529,"naverSa_rev":2175010,"olive_ad":566510,"olive_rev":3770800,"coupangCpc_ad":1964307,"coupangCpc_rev":8891280,"coupangNew_ad":951859,"coupangNew_rev":2916166,"ably_ad":380000,"ably_rev":1260600,"zigzag_ad":180341,"zigzag_rev":287900},
+{"date":"2025-05-01","year":2025,"month":5,"week":"18주차","meta_ad":206864,"meta_rev":43440,"naverGfa_ad":47814,"naverGfa_rev":123400,"naverSa_ad":378521,"naverSa_rev":1570900,"olive_ad":522160,"olive_rev":3925800,"coupangCpc_ad":1585462,"coupangCpc_rev":6172480,"coupangNew_ad":715269,"coupangNew_rev":2300731,"ably_ad":600000,"ably_rev":2029500,"zigzag_ad":52007,"zigzag_rev":81500},
+{"date":"2025-05-08","year":2025,"month":5,"week":"19주차","meta_ad":213310,"meta_rev":0,"naverGfa_ad":45926,"naverGfa_rev":151100,"naverSa_ad":440319,"naverSa_rev":1921600,"olive_ad":456020,"olive_rev":3187900,"coupangCpc_ad":1794808,"coupangCpc_rev":7175750,"coupangNew_ad":766950,"coupangNew_rev":2524467,"ably_ad":632503,"ably_rev":1294400,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-05-15","year":2025,"month":5,"week":"20주차","meta_ad":46291,"meta_rev":14400,"naverGfa_ad":45990,"naverGfa_rev":32800,"naverSa_ad":442739,"naverSa_rev":1480500,"olive_ad":455550,"olive_rev":3320800,"coupangCpc_ad":1659545,"coupangCpc_rev":5023050,"coupangNew_ad":1542691,"coupangNew_rev":5555352,"ably_ad":490000,"ably_rev":1045500,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-05-22","year":2025,"month":5,"week":"21주차","meta_ad":74790,"meta_rev":122400,"naverGfa_ad":90811,"naverGfa_rev":137300,"naverSa_ad":644721,"naverSa_rev":2262800,"olive_ad":766250,"olive_rev":5987700,"coupangCpc_ad":2088759,"coupangCpc_rev":7674390,"coupangNew_ad":2139167,"coupangNew_rev":6445330,"ably_ad":610000,"ably_rev":1689800,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-06-01","year":2025,"month":6,"week":"23주차","meta_ad":575882,"meta_rev":514080,"naverGfa_ad":70162,"naverGfa_rev":132200,"naverSa_ad":354706,"naverSa_rev":1085700,"olive_ad":1481080,"olive_rev":13768200,"coupangCpc_ad":858765,"coupangCpc_rev":2881340,"coupangNew_ad":1638298,"coupangNew_rev":4888860,"ably_ad":163387,"ably_rev":369400,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-06-08","year":2025,"month":6,"week":"24주차","meta_ad":10,"meta_rev":14400,"naverGfa_ad":64630,"naverGfa_rev":180900,"naverSa_ad":482273,"naverSa_rev":1473000,"olive_ad":1079030,"olive_rev":2121700,"coupangCpc_ad":775023,"coupangCpc_rev":3490410,"coupangNew_ad":2159704,"coupangNew_rev":5716260,"ably_ad":220000,"ably_rev":319300,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-06-15","year":2025,"month":6,"week":"25주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":60267,"naverGfa_rev":140100,"naverSa_ad":521290,"naverSa_rev":1343800,"olive_ad":508410,"olive_rev":998000,"coupangCpc_ad":835326,"coupangCpc_rev":3137930,"coupangNew_ad":1633236,"coupangNew_rev":5312320,"ably_ad":180000,"ably_rev":376900,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-06-22","year":2025,"month":6,"week":"26주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":81336,"naverGfa_rev":231600,"naverSa_ad":617265,"naverSa_rev":1907800,"olive_ad":175320,"olive_rev":454100,"coupangCpc_ad":1152088,"coupangCpc_rev":5701300,"coupangNew_ad":1851886,"coupangNew_rev":5634860,"ably_ad":63378,"ably_rev":214600,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-07-01","year":2025,"month":7,"week":"27주차","meta_ad":1202624,"meta_rev":475200,"naverGfa_ad":68248,"naverGfa_rev":142700,"naverSa_ad":363187,"naverSa_rev":990100,"olive_ad":117780,"olive_rev":328100,"coupangCpc_ad":541620,"coupangCpc_rev":2466710,"coupangNew_ad":1154261,"coupangNew_rev":4130960,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-07-08","year":2025,"month":7,"week":"28주차","meta_ad":425344,"meta_rev":57600,"naverGfa_ad":71479,"naverGfa_rev":361100,"naverSa_ad":441045,"naverSa_rev":1137500,"olive_ad":205180,"olive_rev":664400,"coupangCpc_ad":28223,"coupangCpc_rev":47400,"coupangNew_ad":1198505,"coupangNew_rev":3886400,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-07-15","year":2025,"month":7,"week":"29주차","meta_ad":1594912,"meta_rev":540720,"naverGfa_ad":78850,"naverGfa_rev":540700,"naverSa_ad":505538,"naverSa_rev":1637500,"olive_ad":301750,"olive_rev":1286800,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1292874,"coupangNew_rev":3920680,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-07-22","year":2025,"month":7,"week":"30주차","meta_ad":1070177,"meta_rev":492480,"naverGfa_ad":75782,"naverGfa_rev":480500,"naverSa_ad":580723,"naverSa_rev":2128900,"olive_ad":880960,"olive_rev":7390200,"coupangCpc_ad":300081,"coupangCpc_rev":1075710,"coupangNew_ad":1611099,"coupangNew_rev":5733500,"ably_ad":140000,"ably_rev":344700,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-08-01","year":2025,"month":8,"week":"31주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":156232,"naverGfa_rev":662000,"naverSa_ad":455125,"naverSa_rev":1087000,"olive_ad":421470,"olive_rev":2532600,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1242917,"coupangNew_rev":4421980,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-08-08","year":2025,"month":8,"week":"32주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":69283,"naverGfa_rev":140900,"naverSa_ad":412027,"naverSa_rev":1008400,"olive_ad":339310,"olive_rev":1607900,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1398345,"coupangNew_rev":4480750,"ably_ad":40000,"ably_rev":135200,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-08-15","year":2025,"month":8,"week":"33주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":95672,"naverGfa_rev":324400,"naverSa_ad":486849,"naverSa_rev":1350280,"olive_ad":334420,"olive_rev":1297200,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1284428,"coupangNew_rev":3834750,"ably_ad":70000,"ably_rev":185400,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-08-22","year":2025,"month":8,"week":"34주차","meta_ad":850700,"meta_rev":501840,"naverGfa_ad":202881,"naverGfa_rev":453100,"naverSa_ad":613558,"naverSa_rev":1858010,"olive_ad":1394860,"olive_rev":9250700,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1506563,"coupangNew_rev":4891300,"ably_ad":43191,"ably_rev":79700,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-09-01","year":2025,"month":9,"week":"36주차","meta_ad":910171,"meta_rev":1126080,"naverGfa_ad":60767,"naverGfa_rev":292200,"naverSa_ad":338250,"naverSa_rev":1106400,"olive_ad":1620730,"olive_rev":6746300,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1051478,"coupangNew_rev":3788930,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-09-08","year":2025,"month":9,"week":"37주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":73078,"naverGfa_rev":206300,"naverSa_ad":349723,"naverSa_rev":1247600,"olive_ad":684960,"olive_rev":2154400,"coupangCpc_ad":0,"coupangCpc_rev":0,"coupangNew_ad":1050276,"coupangNew_rev":3648250,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-09-15","year":2025,"month":9,"week":"38주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":77097,"naverGfa_rev":460100,"naverSa_ad":316063,"naverSa_rev":1823600,"olive_ad":280220,"olive_rev":778000,"coupangCpc_ad":349902,"coupangCpc_rev":1136500,"coupangNew_ad":1050481,"coupangNew_rev":3464060,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-09-22","year":2025,"month":9,"week":"39주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":100430,"naverGfa_rev":422400,"naverSa_ad":314958,"naverSa_rev":1479000,"olive_ad":260020,"olive_rev":1229800,"coupangCpc_ad":622408,"coupangCpc_rev":2826560,"coupangNew_ad":1352742,"coupangNew_rev":3459320,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-10-01","year":2025,"month":10,"week":"40주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":175442,"naverGfa_rev":459900,"naverSa_ad":136103,"naverSa_rev":602500,"olive_ad":204140,"olive_rev":697300,"coupangCpc_ad":494293,"coupangCpc_rev":2081640,"coupangNew_ad":1087924,"coupangNew_rev":3039240,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-10-08","year":2025,"month":10,"week":"41주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":196478,"naverGfa_rev":450900,"naverSa_ad":296098,"naverSa_rev":887000,"olive_ad":260850,"olive_rev":1373100,"coupangCpc_ad":514828,"coupangCpc_rev":2595530,"coupangNew_ad":1166289,"coupangNew_rev":1771290,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-10-15","year":2025,"month":10,"week":"42주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":187106,"naverGfa_rev":598300,"naverSa_ad":295933,"naverSa_rev":1104900,"olive_ad":406960,"olive_rev":1246100,"coupangCpc_ad":583864,"coupangCpc_rev":2694710,"coupangNew_ad":633805,"coupangNew_rev":1880860,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-10-22","year":2025,"month":10,"week":"43주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":356065,"naverGfa_rev":948200,"naverSa_ad":463408,"naverSa_rev":1583520,"olive_ad":523910,"olive_rev":3044900,"coupangCpc_ad":862757,"coupangCpc_rev":5976320,"coupangNew_ad":696925,"coupangNew_rev":2465220,"ably_ad":256111,"ably_rev":138700,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-11-01","year":2025,"month":11,"week":"44주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":215297,"naverGfa_rev":862700,"naverSa_ad":353199,"naverSa_rev":1216300,"olive_ad":544060,"olive_rev":3433100,"coupangCpc_ad":1134076,"coupangCpc_rev":5890670,"coupangNew_ad":309884,"coupangNew_rev":1020260,"ably_ad":42940,"ably_rev":33800,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-11-08","year":2025,"month":11,"week":"45주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":277097,"naverGfa_rev":924240,"naverSa_ad":376123,"naverSa_rev":1239600,"olive_ad":432980,"olive_rev":1533200,"coupangCpc_ad":1850960,"coupangCpc_rev":7958030,"coupangNew_ad":127890,"coupangNew_rev":526380,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-11-15","year":2025,"month":11,"week":"46주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":289358,"naverGfa_rev":797600,"naverSa_ad":354585,"naverSa_rev":1062200,"olive_ad":212510,"olive_rev":1292200,"coupangCpc_ad":1876249,"coupangCpc_rev":8264000,"coupangNew_ad":118610,"coupangNew_rev":521500,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-11-22","year":2025,"month":11,"week":"47주차","meta_ad":158963,"meta_rev":171680,"naverGfa_ad":266083,"naverGfa_rev":775700,"naverSa_ad":486255,"naverSa_rev":1564700,"olive_ad":897620,"olive_rev":4842600,"coupangCpc_ad":2537634,"coupangCpc_rev":10256350,"coupangNew_ad":272462,"coupangNew_rev":902180,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-12-01","year":2025,"month":12,"week":"49주차","meta_ad":540328,"meta_rev":1453482.32,"naverGfa_ad":233860,"naverGfa_rev":1281530,"naverSa_ad":394713,"naverSa_rev":1407910,"olive_ad":1680050,"olive_rev":6462600,"coupangCpc_ad":2143853,"coupangCpc_rev":9166980,"coupangNew_ad":214248,"coupangNew_rev":664420,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-12-08","year":2025,"month":12,"week":"50주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":243133,"naverGfa_rev":1302420,"naverSa_ad":431409,"naverSa_rev":1478860,"olive_ad":715200,"olive_rev":1001900,"coupangCpc_ad":2192907,"coupangCpc_rev":8537610,"coupangNew_ad":213280,"coupangNew_rev":1004580,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-12-15","year":2025,"month":12,"week":"51주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":243661,"naverGfa_rev":1091800,"naverSa_ad":416856,"naverSa_rev":1336200,"olive_ad":178690,"olive_rev":766700,"coupangCpc_ad":1933123,"coupangCpc_rev":6719940,"coupangNew_ad":189661,"coupangNew_rev":733720,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0},
+{"date":"2025-12-22","year":2025,"month":12,"week":"52주차","meta_ad":0,"meta_rev":0,"naverGfa_ad":385011,"naverGfa_rev":1403780,"naverSa_ad":551661,"naverSa_rev":2120200,"olive_ad":263150,"olive_rev":913700,"coupangCpc_ad":2535277,"coupangCpc_rev":10663620,"coupangNew_ad":308690,"coupangNew_rev":720900,"ably_ad":0,"ably_rev":0,"zigzag_ad":0,"zigzag_rev":0}
+];
+
 // ── 엑셀 파싱 ──
 async function handleFile(file){
   if(!file) return;
@@ -353,6 +435,8 @@ async function handleFile(file){
     calcPrevMonthSamePeriod(wb);
     // 3. 채널별 광고 → 채널별 광고비 + ROAS
     parseAdCost(wb);
+    // 4. 채널별 광고 (주차별) → 채널별 광고 현황 탭
+    parseAdWeekly(wb);
 
     // 화면 업데이트
     updateOverview();
@@ -360,6 +444,7 @@ async function handleFile(file){
     renderChList();
     renderChTable();
     renderTrendTable();
+    renderAdPerf();
 
     // 업로드 요약
     const preview = document.getElementById('upload-preview');
@@ -544,6 +629,44 @@ function parseAdCost(wb){
   S.adRevChannels=adRev;
 }
 
+// 채널 메타: 주차별 광고 시트 컬럼 매핑 [광고비col, 매출col] (1-indexed XLSX cols → 0-indexed in array)
+// A=0(date),B=1(year),C=2(month),D=3(week)
+// META: E~I(4~8) → ad=4,rev=7 / 네이버GFA: J~N(9~13) → ad=9,rev=12 / 네이버SA: O~S(14~18) → ad=14,rev=17
+// 올리브영: T~X(19~23) → ad=19,rev=22 / 쿠팡CPC: Y~AC(24~28) → ad=24,rev=27 / 쿠팡신규: AD~AG(29~32,4컬럼) → ad=29,rev=31
+// 아마존: AH~AL(33~37) → ad=33,rev=36 / 틱톡: AM~AP(38~41,4컬럼) → ad=38,rev=41(전환금액)
+const AD_WEEKLY_COLS = {
+  meta:{ad:4,rev:7}, naverGfa:{ad:9,rev:12}, naverSa:{ad:14,rev:17},
+  olive:{ad:19,rev:22}, coupangCpc:{ad:24,rev:27}, coupangNew:{ad:29,rev:31},
+  amazon:{ad:33,rev:36}, tiktok:{ad:38,rev:41}
+};
+const AD_WEEKLY_LABELS = {
+  meta:'META', naverGfa:'네이버 GFA', naverSa:'네이버 SA', olive:'올리브영',
+  coupangCpc:'쿠팡(CPC)', coupangNew:'쿠팡(신규고객)', amazon:'아마존', tiktok:'틱톡'
+};
+// 2025년에 운영하지 않은 채널 (2025년 데이터 표시 안 함)
+const NO_2025_CHANNELS = ['amazon','tiktok'];
+
+function parseAdWeekly(wb){
+  const ws = wb.Sheets['채널별 광고'];
+  if(!ws) return;
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+  const weekly=[];
+  rows.forEach(row=>{
+    const date=row[0]; const yr=row[1]; const mo=row[2]; const wk=row[3];
+    if(!date||!yr||!mo||!wk) return;
+    // 데이터 유효성: META 광고비(col4)가 숫자여야 유효한 행
+    if(typeof row[4]!=='number') return;
+    const entry={date,year:yr,month:mo,week:wk};
+    Object.entries(AD_WEEKLY_COLS).forEach(([k,{ad,rev}])=>{
+      const adv=row[ad]; const revv=row[rev];
+      entry[k+'_ad']=typeof adv==='number'?adv:0;
+      entry[k+'_rev']=typeof revv==='number'?revv:0;
+    });
+    weekly.push(entry);
+  });
+  S.adWeekly=weekly;
+}
+
 // ── 화면 업데이트 ──
 function updateOverview(){
   const{revenue,target,prevMonth,prevYear,profit,adcost,year,month}=S;
@@ -554,6 +677,17 @@ function updateOverview(){
   const pa=document.getElementById('prog-ach');
   pa.style.width=Math.min(ach*100,100)+'%';
   pa.style.background=ach>=1?'var(--green)':ach>=.7?'var(--amber)':'var(--red)';
+
+  // 예상 월말 목표 달성률 (현재 추세 기준 → maxDay 페이스로 월 전체 추정)
+  const fcEl=document.getElementById('ov-forecast');
+  if(S._maxDay&&revenue&&target){
+    const daysInMonth=new Date(year,month,0).getDate();
+    const projected=revenue/S._maxDay*daysInMonth;
+    const projAch=projected/target*100;
+    fcEl.textContent=`이 추세로 가면 월말 예상 ${projAch.toFixed(1)}% (${fmtM(projected)})`;
+  }else{
+    fcEl.textContent='';
+  }
 
   // 전월 동기간 대비
   const mom=prevMonth&&revenue?(revenue-prevMonth)/prevMonth:null;
@@ -567,11 +701,6 @@ function updateOverview(){
   document.getElementById('ov-acos').textContent=acos!==null?(acos*100).toFixed(1)+'%':'—';
   const ab=document.getElementById('ov-acos-b');
   if(acos!==null) ab.innerHTML=`<div class="badge ${acos<.25?'bg':'br'}">${acos<.25?'✓ 목표이내':'⚠ 목표초과'} (25%)</div>`;
-  const margin=profit&&revenue?profit/revenue:null;
-  document.getElementById('ov-margin').textContent=margin!==null?(margin*100).toFixed(1)+'%':'—';
-  const op=profit&&adcost?profit-adcost:null;
-  document.getElementById('ov-op').textContent=op!==null?fmtM(op):'—';
-  document.getElementById('ov-op-b').innerHTML=op!==null?`<div class="badge ${op>0?'bg':'br'}">${op>0?'흑자':'적자'}</div>`:'';
 
   // 채널 요약
   const ch=S.channels;
@@ -749,6 +878,294 @@ function renderTrendTable(){
 }
 
 function switchTrendTab(type,btn){renderTrendDetail(type,btn);}
+
+// ── 채널별 광고 현황 ──
+function renderAdPerf(){
+  const weekly=S.adWeekly;
+  if(!weekly||!weekly.length){
+    document.getElementById('adperf-lastweek-tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr>';
+    document.getElementById('adperf-mtd-tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr>';
+    return;
+  }
+  // 데이터가 있는 가장 마지막 행 = 지난주
+  const lastWeek=weekly[weekly.length-1];
+
+  // 이번 달 누적: lastWeek와 동일한 연/월의 모든 주차
+  const mtdWeeks=weekly.filter(w=>w.year===lastWeek.year&&w.month===lastWeek.month);
+  const mtdCount=mtdWeeks.length;
+
+  // 전월 동일 주차 대비: 이번 달의 N번째 주차 → 전월의 N번째 주차와 비교
+  const prevYr=lastWeek.month===1?lastWeek.year-1:lastWeek.year;
+  const prevMo=lastWeek.month===1?12:lastWeek.month-1;
+  const prevMonthAllWeeks=weekly.filter(w=>w.year===prevYr&&w.month===prevMo);
+  // 전월에서 같은 순번(1~N번째)의 주차들만 추출
+  const prevPeriodWeeks=prevMonthAllWeeks.slice(0,mtdCount);
+
+  // 지난주 테이블 (전월 동일 순번 주차 대비)
+  const lastWeekOrdinal=mtdCount; // 이번 달에서 마지막 주차의 순번
+  const prevSameWeek=prevMonthAllWeeks[lastWeekOrdinal-1]||null;
+  const lwCompareText=prevSameWeek?` · 전월 ${prevSameWeek.week} 대비`:'';
+  document.getElementById('adperf-lastweek-title').textContent=`지난주 (${lastWeek.year}.${lastWeek.month} ${lastWeek.week}) 채널별 광고 현황${lwCompareText}`;
+  document.getElementById('adperf-lastweek-tbody').innerHTML=renderAdPerfRows([lastWeek],prevSameWeek?[prevSameWeek]:null);
+
+  // 이번 달 누적 테이블 (전월 동일 주차 누적 대비)
+  const mtdCompareText=prevPeriodWeeks.length?` · 전월 ${prevPeriodWeeks.map(w=>w.week).join(', ')} 대비`:'';
+  document.getElementById('adperf-mtd-title').textContent=`${lastWeek.year}년 ${lastWeek.month}월 누적 (${mtdWeeks.map(w=>w.week).join(', ')})${mtdCompareText}`;
+  document.getElementById('adperf-mtd-tbody').innerHTML=renderAdPerfRows(mtdWeeks,prevPeriodWeeks.length?prevPeriodWeeks:null);
+
+  // 탭 버튼 (채널 선택)
+  const tabsEl=document.getElementById('adperf-tabs');
+  tabsEl.innerHTML=Object.entries(AD_WEEKLY_LABELS).map(([k,label])=>
+    `<button class="tab ${k===adPerfSelectedChannel?'active':''}" onclick="adPerfSelectedChannel='${k}';renderAdPerf()">${label}</button>`
+  ).join('');
+
+  renderAdPerfChart();
+  renderAdPerfRoasChart();
+  renderAdPerfAcosChart();
+}
+
+// 주차 날짜 라벨: 엑셀 시리얼(숫자) 또는 "YYYY-MM-DD" 문자열 → "M/D"
+function fmtWeekDate(w){
+  const d=w.date;
+  if(typeof d==='number'){
+    // 엑셀 시리얼 → JS Date (1899-12-30 기준)
+    const dt=new Date(Date.UTC(1899,11,30)+d*86400000);
+    return `${dt.getUTCMonth()+1}/${dt.getUTCDate()}`;
+  }
+  if(typeof d==='string'){
+    const m=d.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return `${parseInt(m[2])}/${parseInt(m[3])}`;
+  }
+  // fallback: 월/주차
+  return `${w.month}/${(w.week||'').replace('주차','주')}`;
+}
+
+function deltaBadge(curr,prev,inverse){
+  // inverse=true면 증가가 나쁜 지표 (ACoS 등) → 색상 반전
+  if(prev===null||prev===undefined||prev===0||curr===null) return '';
+  const diff=(curr-prev)/prev*100;
+  if(Math.abs(diff)<0.05) return '';
+  const up=diff>0;
+  // 기본: 증가=긍정(초록). inverse: 증가=부정(빨강)
+  const good = inverse ? !up : up;
+  return `<span class="badge ${good?'bg':'br'}" style="font-size:9px;margin-left:4px;padding:1px 5px">${up?'▲':'▼'}${Math.abs(diff).toFixed(0)}%</span>`;
+}
+
+function renderAdPerfRows(weeks,prevWeeks){
+  const sums={};
+  Object.keys(AD_WEEKLY_COLS).forEach(k=>{sums[k]={ad:0,rev:0}});
+  weeks.forEach(w=>{
+    Object.keys(AD_WEEKLY_COLS).forEach(k=>{
+      sums[k].ad+=w[k+'_ad']||0;
+      sums[k].rev+=w[k+'_rev']||0;
+    });
+  });
+
+  let prevSums=null;
+  if(prevWeeks&&prevWeeks.length){
+    prevSums={};
+    Object.keys(AD_WEEKLY_COLS).forEach(k=>{prevSums[k]={ad:0,rev:0}});
+    prevWeeks.forEach(w=>{
+      Object.keys(AD_WEEKLY_COLS).forEach(k=>{
+        prevSums[k].ad+=w[k+'_ad']||0;
+        prevSums[k].rev+=w[k+'_rev']||0;
+      });
+    });
+  }
+
+  return Object.entries(sums).filter(([,v])=>v.ad>0||v.rev>0).map(([k,v])=>{
+    const label=AD_WEEKLY_LABELS[k];
+    // 광고비 1만원 미만이면 ROAS/ACoS는 의미없는 이상치로 제외
+    const validAd=v.ad>=10000;
+    const roas=validAd?(v.rev/v.ad*100):null;
+    const acos=v.rev&&validAd?(v.ad/v.rev*100):null;
+
+    let adDelta='',revDelta='',roasDelta='',acosDelta='';
+    if(prevSums){
+      const pv=prevSums[k];
+      const pRoas=pv.ad>=10000?(pv.rev/pv.ad*100):null;
+      const pAcos=(pv.rev&&pv.ad>=10000)?(pv.ad/pv.rev*100):null;
+      adDelta=deltaBadge(v.ad,pv.ad);
+      revDelta=deltaBadge(v.rev,pv.rev);
+      roasDelta=deltaBadge(roas,pRoas);
+      acosDelta=deltaBadge(acos,pAcos,true); // ACoS는 증가가 나쁨
+    }
+
+    return`<tr>
+      <td>${label}</td>
+      <td class="num">${fmtM(v.ad)}${adDelta}</td>
+      <td class="num">${fmtM(v.rev)}${revDelta}</td>
+      <td class="num">${roas!==null?`<b>${roas.toFixed(0)}%</b>`:'—'}${roasDelta}</td>
+      <td class="num">${acos!==null?`<b style="color:${acos<25?'var(--green)':'var(--red)'}">${acos.toFixed(1)}%</b>`:'—'}${acosDelta}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdPerfChart(){
+  const weekly=S.adWeekly||[];
+  const k=adPerfSelectedChannel;
+  const label=AD_WEEKLY_LABELS[k];
+
+  // 2026년 데이터 (시간순)
+  const labels2026=weekly.map(fmtWeekDate);
+  const data2026=weekly.map(w=>w[k+'_ad']||0);
+
+  // 2025년 동일 채널 데이터 (PREV_YEAR_AD_WEEKLY) - 2025년 미운영 채널은 제외
+  const has2025 = !NO_2025_CHANNELS.includes(k);
+  const data2025=has2025?PREV_YEAR_AD_WEEKLY.map(w=>w[k+'_ad']||0):[];
+  const labels2025=PREV_YEAR_AD_WEEKLY.map(fmtWeekDate);
+
+  // x축: 2025년 라벨 기준으로 맞추되, 2026년 데이터를 같은 인덱스 위치에 배치 (월/주 기준 정렬)
+  const labels=has2025&&labels2025.length>=labels2026.length?labels2025:labels2026;
+
+  const datasets=[];
+  if(has2025){
+    datasets.push({
+      label:'2025년',data:data2025,
+      borderColor:'rgba(180,180,180,0.6)',backgroundColor:'rgba(180,180,180,0.05)',
+      tension:.4,pointRadius:1,fill:false,borderWidth:1.5,borderDash:[4,3],
+      pointBackgroundColor:'rgba(180,180,180,0.6)'
+    });
+  }
+  datasets.push({
+    label:'2026년',data:data2026,
+    borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.06)',
+    tension:.4,pointRadius:2,fill:true,borderWidth:2.5,pointBackgroundColor:'#1a1917'
+  });
+
+  if(adPerfChart)adPerfChart.destroy();
+  adPerfChart=new Chart(document.getElementById('adperfChart'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:20,usePointStyle:true}},
+        title:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?Math.round(ctx.parsed.y).toLocaleString('ko-KR')+'원':'-'}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:true,maxTicksLimit:20}}
+      }
+    }
+  });
+  document.getElementById('adperf-trend-title').textContent=`${label} 광고비 추이`;
+}
+
+function renderAdPerfRoasChart(){
+  const weekly=S.adWeekly||[];
+  const k=adPerfSelectedChannel;
+  const label=AD_WEEKLY_LABELS[k];
+
+  // ROAS(%) = rev/ad*100, 단 광고비가 1만원 미만이면 의미없는 이상치로 제외(null)
+  const MIN_AD=10000;
+  const calcRoas=w=>{
+    const ad=w[k+'_ad'], rev=w[k+'_rev'];
+    if(!ad||ad<MIN_AD) return null;
+    return rev/ad*100;
+  };
+
+  // 2026년 ROAS(%)
+  const labels2026=weekly.map(fmtWeekDate);
+  const data2026=weekly.map(calcRoas);
+
+  // 2025년 ROAS(%) - 2025년 미운영 채널은 제외
+  const has2025 = !NO_2025_CHANNELS.includes(k);
+  const data2025=has2025?PREV_YEAR_AD_WEEKLY.map(calcRoas):[];
+  const labels2025=PREV_YEAR_AD_WEEKLY.map(fmtWeekDate);
+
+  const labels=has2025&&labels2025.length>=labels2026.length?labels2025:labels2026;
+
+  const datasets=[];
+  if(has2025){
+    datasets.push({
+      label:'2025년 ROAS',data:data2025,
+      borderColor:'rgba(180,180,180,0.6)',backgroundColor:'rgba(180,180,180,0.05)',
+      tension:.4,pointRadius:1,fill:false,borderWidth:1.5,borderDash:[4,3],
+      pointBackgroundColor:'rgba(180,180,180,0.6)',spanGaps:true
+    });
+  }
+  datasets.push({
+    label:'2026년 ROAS',data:data2026,
+    borderColor:'#1d4ed8',backgroundColor:'rgba(29,78,216,.06)',
+    tension:.4,pointRadius:2,fill:true,borderWidth:2.5,pointBackgroundColor:'#1d4ed8',spanGaps:true
+  });
+
+  if(adPerfRoasChart)adPerfRoasChart.destroy();
+  adPerfRoasChart=new Chart(document.getElementById('adperfRoasChart'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:20,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toFixed(0)+'%':'-'}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v.toFixed(0)+'%',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:true,maxTicksLimit:20}}
+      }
+    }
+  });
+  document.getElementById('adperf-roas-trend-title').textContent=`${label} ROAS 추이`;
+}
+
+function renderAdPerfAcosChart(){
+  const weekly=S.adWeekly||[];
+  const k=adPerfSelectedChannel;
+  const label=AD_WEEKLY_LABELS[k];
+
+  // ACoS(%) = ad/rev*100, 단 광고비 1만원 미만 또는 매출 0이면 제외(null)
+  const MIN_AD=10000;
+  const calcAcos=w=>{
+    const ad=w[k+'_ad'], rev=w[k+'_rev'];
+    if(!ad||ad<MIN_AD||!rev) return null;
+    return ad/rev*100;
+  };
+
+  const labels2026=weekly.map(fmtWeekDate);
+  const data2026=weekly.map(calcAcos);
+
+  const has2025 = !NO_2025_CHANNELS.includes(k);
+  const data2025=has2025?PREV_YEAR_AD_WEEKLY.map(calcAcos):[];
+  const labels2025=PREV_YEAR_AD_WEEKLY.map(fmtWeekDate);
+
+  const labels=has2025&&labels2025.length>=labels2026.length?labels2025:labels2026;
+
+  const datasets=[];
+  if(has2025){
+    datasets.push({
+      label:'2025년 ACoS',data:data2025,
+      borderColor:'rgba(180,180,180,0.6)',backgroundColor:'rgba(180,180,180,0.05)',
+      tension:.4,pointRadius:1,fill:false,borderWidth:1.5,borderDash:[4,3],
+      pointBackgroundColor:'rgba(180,180,180,0.6)',spanGaps:true
+    });
+  }
+  datasets.push({
+    label:'2026년 ACoS',data:data2026,
+    borderColor:'#b83c2b',backgroundColor:'rgba(184,60,43,.06)',
+    tension:.4,pointRadius:2,fill:true,borderWidth:2.5,pointBackgroundColor:'#b83c2b',spanGaps:true
+  });
+
+  if(adPerfAcosChart)adPerfAcosChart.destroy();
+  adPerfAcosChart=new Chart(document.getElementById('adperfAcosChart'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:20,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toFixed(1)+'%':'-'}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v.toFixed(0)+'%',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:true,maxTicksLimit:20}}
+      }
+    }
+  });
+  document.getElementById('adperf-acos-trend-title').textContent=`${label} ACoS 추이`;
+}
 
 // 초기화
 window.addEventListener('load',()=>{
