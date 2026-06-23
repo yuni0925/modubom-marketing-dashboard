@@ -201,18 +201,18 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <div class="page-sub">주차별 광고비, 매출, ROAS/ACoS 현황을 채널별로 분석합니다.</div>
 
   <div class="section card">
-    <div class="card-title" id="adperf-lastweek-title">지난주 채널별 광고 현황</div>
+    <div class="card-title" id="adperf-mtd-title">최근 4주 누적 채널별 광고 현황</div>
     <div style="overflow-x:auto">
       <table><thead><tr><th>채널</th><th class="num">광고비</th><th class="num">매출</th><th class="num">ROAS</th><th class="num">ACoS</th></tr></thead>
-      <tbody id="adperf-lastweek-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
+      <tbody id="adperf-mtd-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
     </div>
   </div>
 
   <div class="section card">
-    <div class="card-title" id="adperf-mtd-title">이번 달 누적 채널별 광고 현황</div>
+    <div class="card-title" id="adperf-lastweek-title">지난주 채널별 광고 현황</div>
     <div style="overflow-x:auto">
       <table><thead><tr><th>채널</th><th class="num">광고비</th><th class="num">매출</th><th class="num">ROAS</th><th class="num">ACoS</th></tr></thead>
-      <tbody id="adperf-mtd-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
+      <tbody id="adperf-lastweek-tbody"><tr><td colspan="5" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
     </div>
   </div>
 
@@ -889,29 +889,25 @@ function renderAdPerf(){
   }
   // 데이터가 있는 가장 마지막 행 = 지난주
   const lastWeek=weekly[weekly.length-1];
+  const lastIdx=weekly.length-1;
 
-  // 이번 달 누적: lastWeek와 동일한 연/월의 모든 주차
-  const mtdWeeks=weekly.filter(w=>w.year===lastWeek.year&&w.month===lastWeek.month);
-  const mtdCount=mtdWeeks.length;
+  // 최근 4주차 누적 (데이터 있는 마지막 주차부터 4주)
+  const WIN=4;
+  const recentWeeks=weekly.slice(Math.max(0,lastIdx-WIN+1), lastIdx+1);
+  // 비교 대상: 그 직전 4주차
+  const prevWeeks=weekly.slice(Math.max(0,lastIdx-WIN*2+1), lastIdx-WIN+1);
 
-  // 전월 동일 주차 대비: 이번 달의 N번째 주차 → 전월의 N번째 주차와 비교
-  const prevYr=lastWeek.month===1?lastWeek.year-1:lastWeek.year;
-  const prevMo=lastWeek.month===1?12:lastWeek.month-1;
-  const prevMonthAllWeeks=weekly.filter(w=>w.year===prevYr&&w.month===prevMo);
-  // 전월에서 같은 순번(1~N번째)의 주차들만 추출
-  const prevPeriodWeeks=prevMonthAllWeeks.slice(0,mtdCount);
-
-  // 지난주 테이블 (전월 동일 순번 주차 대비)
-  const lastWeekOrdinal=mtdCount; // 이번 달에서 마지막 주차의 순번
-  const prevSameWeek=prevMonthAllWeeks[lastWeekOrdinal-1]||null;
-  const lwCompareText=prevSameWeek?` · 전월 ${prevSameWeek.week} 대비`:'';
+  // 지난주 테이블 (직전 주차 대비)
+  const prevSingleWeek=lastIdx>0?weekly[lastIdx-1]:null;
+  const lwCompareText=prevSingleWeek?` · 직전 ${prevSingleWeek.week} 대비`:'';
   document.getElementById('adperf-lastweek-title').textContent=`지난주 (${lastWeek.year}.${lastWeek.month} ${lastWeek.week}) 채널별 광고 현황${lwCompareText}`;
-  document.getElementById('adperf-lastweek-tbody').innerHTML=renderAdPerfRows([lastWeek],prevSameWeek?[prevSameWeek]:null);
+  document.getElementById('adperf-lastweek-tbody').innerHTML=renderAdPerfRows([lastWeek],prevSingleWeek?[prevSingleWeek]:null);
 
-  // 이번 달 누적 테이블 (전월 동일 주차 누적 대비)
-  const mtdCompareText=prevPeriodWeeks.length?` · 전월 ${prevPeriodWeeks.map(w=>w.week).join(', ')} 대비`:'';
-  document.getElementById('adperf-mtd-title').textContent=`${lastWeek.year}년 ${lastWeek.month}월 누적 (${mtdWeeks.map(w=>w.week).join(', ')})${mtdCompareText}`;
-  document.getElementById('adperf-mtd-tbody').innerHTML=renderAdPerfRows(mtdWeeks,prevPeriodWeeks.length?prevPeriodWeeks:null);
+  // 최근 4주 누적 테이블 (직전 4주 대비)
+  const recentLabel=recentWeeks.map(w=>w.week).join(', ');
+  const mtdCompareText=prevWeeks.length?` · 직전 ${prevWeeks.map(w=>w.week).join(', ')} 대비`:'';
+  document.getElementById('adperf-mtd-title').textContent=`최근 4주 누적 (${recentLabel})${mtdCompareText}`;
+  document.getElementById('adperf-mtd-tbody').innerHTML=renderAdPerfRows(recentWeeks,prevWeeks.length?prevWeeks:null);
 
   // 탭 버튼 (채널 선택)
   const tabsEl=document.getElementById('adperf-tabs');
