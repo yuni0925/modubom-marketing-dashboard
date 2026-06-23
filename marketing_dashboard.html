@@ -102,6 +102,7 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   <button class="nav-item active" onclick="showPage('overview')">📈 전체 현황</button>
   <button class="nav-item" onclick="showPage('channel')">🗂 채널별 분석</button>
   <button class="nav-item" onclick="showPage('adperf')">📢 채널별 광고 현황</button>
+  <button class="nav-item" onclick="showPage('product')">📦 제품별 분석</button>
   <button class="nav-item" onclick="showPage('trend')">📉 추이 분석</button>
   <div class="nav-label">관리</div>
   <button class="nav-item" onclick="showPage('upload')">📂 파일 업로드</button>
@@ -236,6 +237,43 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   </div>
 </div>
 
+<!-- 제품별 분석 -->
+<div class="page" id="page-product">
+  <div class="page-title">제품별 분석</div>
+  <div class="page-sub">제품별 월간 판매수량 추이와 채널별 판매 구성을 분석합니다.</div>
+
+  <div class="section card">
+    <div class="card-title">이번 달 제품별 판매수량</div>
+    <div id="product-summary"><div class="empty">파일을 업로드해주세요.</div></div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title">제품별 월간 판매수량 추이</div>
+    <div style="position:relative;height:280px"><canvas id="productTrendChart" role="img" aria-label="제품별 판매 추이">제품별 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">제품을 클릭하면 범례에서 켜고 끌 수 있어요.</div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title">제품별 최근 8주 판매수량 추이</div>
+    <div style="position:relative;height:280px"><canvas id="productWeeklyChart" role="img" aria-label="제품별 주간 판매 추이">제품별 주간 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">주차 기준: 매월 1·8·15·22일 시작 (1~7일=1주차)</div>
+  </div>
+
+  <div class="section card">
+    <div class="tab-row" id="product-tabs"></div>
+    <div class="card-title" id="product-channel-title">제품별 채널 구성</div>
+    <div style="position:relative;height:240px"><canvas id="productChannelChart" role="img" aria-label="제품 채널 구성">채널 구성</canvas></div>
+  </div>
+
+  <div class="section card">
+    <div class="card-title" id="product-channel-table-title">선택 제품 채널별 판매수량</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>채널</th><th class="num">판매수량</th><th class="num">비중</th></tr></thead>
+      <tbody id="product-channel-tbody"><tr><td colspan="3" style="text-align:center;color:var(--hint);padding:20px">파일을 업로드해주세요.</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 
@@ -251,8 +289,9 @@ let S = {
   hist:{months:[],revenue:[],adcost:[],profit:[],target:[]}
 };
 
-let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null;
+let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
 let adPerfSelectedChannel='naverSa';
+let productSelected=null;
 
 // 채널 메타
 const CH_INFO = {
@@ -279,12 +318,13 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  // sidebar order: overview, channel, adperf, trend, upload
-  const sidebarMap={overview:0,channel:1,adperf:2,trend:3,upload:4};
+  // sidebar order: overview, channel, adperf, product, trend, upload
+  const sidebarMap={overview:0,channel:1,adperf:2,product:3,trend:4,upload:5};
   const si=sidebarMap[name];
   if(si!==undefined) document.querySelectorAll('.nav-item')[si]?.classList.add('active');
   if(name==='channel'){renderChPie();}
   if(name==='adperf'){renderAdPerf();}
+  if(name==='product'){renderProduct();}
   if(name==='trend'){renderTrendDetail('monthly',document.querySelector('.tab.active'));}
 }
 
@@ -437,6 +477,8 @@ async function handleFile(file){
     parseAdCost(wb);
     // 4. 채널별 광고 (주차별) → 채널별 광고 현황 탭
     parseAdWeekly(wb);
+    // 5. 품목별 판매현황 → 제품별 분석
+    parseProduct(wb);
 
     // 화면 업데이트
     updateOverview();
@@ -445,6 +487,7 @@ async function handleFile(file){
     renderChTable();
     renderTrendTable();
     renderAdPerf();
+    renderProduct();
 
     // 업로드 요약
     const preview = document.getElementById('upload-preview');
@@ -665,6 +708,101 @@ function parseAdWeekly(wb){
     weekly.push(entry);
   });
   S.adWeekly=weekly;
+}
+
+// 제품별 판매현황 파싱
+// 단종 제품 (주간 추이·채널 구성에서 제외, 월간 추이에는 이력 유지)
+const DISCONTINUED_PRODUCTS=['모두봄 샴푸 브러쉬'];
+function isDiscontinued(name){return name&&DISCONTINUED_PRODUCTS.some(d=>name.includes(d)||name.replace(/\s/g,'').includes('샴푸브러쉬'));}
+
+// 일별 매출 시트의 채널별 '수량' 컬럼 (제품 분석용)
+const PRODUCT_CH_COLS = {naver:10,coupang:13,olive:16,ably:19,zigzag:22,musinsa:25,'11st':28,gmarket:31,qten:34,amazon:37,gonggu:40,etc:43,export:46};
+const PRODUCT_CH_LABELS = {naver:'네이버',coupang:'쿠팡',olive:'올리브영',ably:'에이블리',zigzag:'지그재그',musinsa:'무신사','11st':'11번가',gmarket:'G마켓/옥션',qten:'큐텐JP',amazon:'아마존US',gonggu:'국내공구',etc:'국내기타',export:'해외수출'};
+
+// 제품별 분석: '품목별 판매현황' 시트는 수식(SUMIF) 기반이라 SheetJS로 못 읽음.
+// 대신 '채널별 일 매출' 시트의 일별 원본 데이터에서 직접 집계 (정확함)
+function parseProduct(wb){
+  const ws = wb.Sheets['채널별 일 매출'];
+  if(!ws){ S.products=null; return; }
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+
+  // 제품 x 연-월 집계
+  const data={}; // {제품명: [{year,month,total,channels:{}}]}
+  const pmAgg={}; // {제품: {'2026-06': {total, channels:{}}}}
+  rows.forEach(row=>{
+    const yr=row[2],mo=row[3],day=row[4],name=row[5],qty=row[6];
+    if(typeof yr!=='number'||yr<2024||yr>2030)return;
+    if(typeof mo!=='number'||mo<1||mo>12)return;
+    if(typeof day!=='number'||day<1||day>31)return;
+    if(!name||typeof qty!=='number')return;
+    const key=`${yr}-${String(mo).padStart(2,'0')}`;
+    if(!pmAgg[name])pmAgg[name]={};
+    if(!pmAgg[name][key])pmAgg[name][key]={year:yr,month:mo,total:0,channels:{}};
+    pmAgg[name][key].total+=qty;
+    Object.entries(PRODUCT_CH_COLS).forEach(([k,c])=>{
+      const v=row[c];
+      if(typeof v==='number')pmAgg[name][key].channels[k]=(pmAgg[name][key].channels[k]||0)+v;
+    });
+  });
+
+  const periodsSet=new Set();
+  Object.entries(pmAgg).forEach(([name,months])=>{
+    data[name]=[];
+    Object.values(months).forEach(rec=>{
+      if(rec.total>0){
+        data[name].push(rec);
+        periodsSet.add(`${rec.year}-${String(rec.month).padStart(2,'0')}`);
+      }
+    });
+    data[name].sort((a,b)=>a.year-b.year||a.month-b.month);
+    if(!data[name].length) delete data[name];
+  });
+
+  const periods=Array.from(periodsSet).sort();
+  S.products={data,periods};
+
+  // 기본 선택: 첫 (단종 아닌) 제품
+  const names=Object.keys(data);
+  const activeNames=names.filter(n=>!DISCONTINUED_PRODUCTS.some(d=>n.includes(d)));
+  if(activeNames.length && (!productSelected || !data[productSelected] || DISCONTINUED_PRODUCTS.some(d=>productSelected.includes(d)))){
+    productSelected=activeNames[0];
+  }
+
+  // 주차별 제품 판매수량
+  parseProductWeekly(wb);
+}
+
+// 주차 정의: 월 1~7=1주, 8~14=2주, 15~21=3주, 22~말일=4주
+function weekKeyOf(yr,mo,day){
+  let wk;
+  if(day<=7)wk=1;else if(day<=14)wk=2;else if(day<=21)wk=3;else wk=4;
+  return `${yr}-${String(mo).padStart(2,'0')}-W${wk}`;
+}
+
+function parseProductWeekly(wb){
+  const ws=wb.Sheets['채널별 일 매출'];
+  if(!ws){ S.productWeekly=null; return; }
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+  const agg={}; // {제품: {weekKey: 수량}}
+  const weekSet=new Set();
+  rows.forEach(row=>{
+    const yr=row[2],mo=row[3],day=row[4],name=row[5],qty=row[6];
+    // 일별 데이터행만: 연도는 2024~2026, 월 1~12, 일 1~31
+    if(typeof yr!=='number'||yr<2024||yr>2030)return;
+    if(typeof mo!=='number'||mo<1||mo>12)return;
+    if(typeof day!=='number'||day<1||day>31)return;
+    if(!name||typeof qty!=='number')return;
+    const wk=weekKeyOf(yr,mo,day);
+    if(!agg[name])agg[name]={};
+    agg[name][wk]=(agg[name][wk]||0)+qty;
+    weekSet.add(wk);
+  });
+  // 데이터가 있는 주차만 (전체 합이 0인 주차 제외)
+  const allWeeks=Array.from(weekSet).sort();
+  const validWeeks=allWeeks.filter(wk=>{
+    return Object.values(agg).some(p=>p[wk]>0);
+  });
+  S.productWeekly={agg,weeks:validWeeks};
 }
 
 // ── 화면 업데이트 ──
@@ -1163,9 +1301,159 @@ function renderAdPerfAcosChart(){
   document.getElementById('adperf-acos-trend-title').textContent=`${label} ACoS 추이`;
 }
 
+// ── 제품별 분석 ──
+const PRODUCT_COLORS=['#1a1917','#3266ad','#e87c00','#3a9e68','#9b5de5','#f15bb5','#e63946','#ff9900','#0099cc'];
+
+function shortProductName(name){
+  // "모두봄 " 접두어 제거해서 간결하게
+  return name.replace(/^모두봄\s*/,'');
+}
+
+function renderProduct(){
+  const P=S.products;
+  if(!P||!Object.keys(P.data).length){
+    document.getElementById('product-summary').innerHTML='<div class="empty">제품 데이터가 없습니다.</div>';
+    return;
+  }
+  const names=Object.keys(P.data);
+  const periods=P.periods;
+  const lastPeriod=periods[periods.length-1];
+  const fmtPeriod=p=>{const[y,m]=p.split('-');return `${y}년 ${parseInt(m)}월`;};
+
+  // 이번 달 제품별 판매수량 요약
+  const summaryEl=document.getElementById('product-summary');
+  const lastData=names.map(name=>{
+    const rec=P.data[name].find(d=>`${d.year}-${String(d.month).padStart(2,'0')}`===lastPeriod);
+    return {name,total:rec?rec.total:0};
+  }).sort((a,b)=>b.total-a.total);
+  const maxTotal=Math.max(...lastData.map(d=>d.total),1);
+  summaryEl.innerHTML=`<div style="font-size:12px;color:var(--hint);margin-bottom:8px">${fmtPeriod(lastPeriod)} 기준</div>`+
+    lastData.filter(d=>d.total>0).map((d,i)=>`
+    <div class="ch-row">
+      <div class="ch-name" style="width:180px">${shortProductName(d.name)}</div>
+      <div class="ch-bar-wrap"><div class="ch-bar" style="width:${d.total/maxTotal*100}%;background:${PRODUCT_COLORS[i%PRODUCT_COLORS.length]}"></div></div>
+      <div class="ch-val">${d.total.toLocaleString('ko-KR')}개</div>
+    </div>`).join('');
+
+  // 제품별 월간 추이 차트
+  renderProductTrend();
+  // 제품별 주간 추이 차트
+  renderProductWeekly();
+
+  // 제품 선택 탭 (단종 제품 제외)
+  const activeNames=names.filter(n=>!isDiscontinued(n));
+  // 선택값이 단종 제품이면 첫 활성 제품으로 변경
+  if(isDiscontinued(productSelected)||!activeNames.includes(productSelected)){
+    productSelected=activeNames[0];
+  }
+  const tabsEl=document.getElementById('product-tabs');
+  tabsEl.innerHTML=activeNames.map(name=>
+    `<button class="tab ${name===productSelected?'active':''}" onclick="productSelected='${name.replace(/'/g,"\\'")}';renderProduct()">${shortProductName(name)}</button>`
+  ).join('');
+
+  // 선택 제품 채널 구성
+  renderProductChannel();
+}
+
+function renderProductTrend(){
+  const P=S.products;
+  const names=Object.keys(P.data);
+  const periods=P.periods;
+  const labels=periods.map(p=>{const[y,m]=p.split('-');return `${y.slice(2)}.${m}`;});
+
+  const datasets=names.map((name,i)=>{
+    const color=PRODUCT_COLORS[i%PRODUCT_COLORS.length];
+    const data=periods.map(p=>{
+      const[y,m]=p.split('-').map(Number);
+      const rec=P.data[name].find(d=>d.year===y&&d.month===m);
+      return rec?rec.total:null;
+    });
+    return{label:shortProductName(name),data,borderColor:color,backgroundColor:color+'15',tension:.3,pointRadius:2,borderWidth:2,fill:false,spanGaps:true};
+  });
+
+  if(productTrendChart)productTrendChart.destroy();
+  productTrendChart=new Chart(document.getElementById('productTrendChart'),{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toLocaleString('ko-KR')+'개':'-'}`}}},
+      scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v.toLocaleString('ko-KR'),font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+}
+
+function renderProductWeekly(){
+  const PW=S.productWeekly;
+  if(!PW||!PW.weeks.length){
+    if(productWeeklyChart)productWeeklyChart.destroy();
+    return;
+  }
+  const names=Object.keys(S.products.data).filter(n=>!isDiscontinued(n));
+  // 최근 8주차
+  const weeks=PW.weeks.slice(-8);
+  // 라벨: "2026-05-W2" → "5/2주"
+  const labels=weeks.map(wk=>{
+    const m=wk.match(/-(\d{2})-W(\d)/);
+    return m?`${parseInt(m[1])}월 ${m[2]}주`:wk;
+  });
+
+  const datasets=names.map((name,i)=>{
+    const color=PRODUCT_COLORS[i%PRODUCT_COLORS.length];
+    const data=weeks.map(wk=>PW.agg[name]?.[wk]??null);
+    return{label:shortProductName(name),data,borderColor:color,backgroundColor:color+'15',tension:.3,pointRadius:2,borderWidth:2,fill:false,spanGaps:true};
+  });
+
+  if(productWeeklyChart)productWeeklyChart.destroy();
+  productWeeklyChart=new Chart(document.getElementById('productWeeklyChart'),{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toLocaleString('ko-KR')+'개':'-'}`}}},
+      scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v.toLocaleString('ko-KR'),font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+}
+
+function renderProductChannel(){
+  const P=S.products;
+  const name=productSelected;
+  const periods=P.periods;
+  const lastPeriod=periods[periods.length-1];
+  const[y,m]=lastPeriod.split('-').map(Number);
+  const rec=P.data[name]?.find(d=>d.year===y&&d.month===m);
+
+  document.getElementById('product-channel-title').textContent=`${shortProductName(name)} 채널 구성 (${y}.${m})`;
+  document.getElementById('product-channel-table-title').textContent=`${shortProductName(name)} 채널별 판매수량`;
+
+  if(!rec){
+    if(productChannelChart)productChannelChart.destroy();
+    document.getElementById('product-channel-tbody').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--hint);padding:20px">데이터 없음</td></tr>';
+    return;
+  }
+
+  const ch=rec.channels;
+  const entries=Object.entries(ch).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+
+  // 도넛 차트
+  const colors=['#3266ad','#e87c00','#3a9e68','#9b5de5','#f15bb5','#444','#ff6b35','#0099cc','#e63946','#ff9900','#0077b6','#888','#5b8c5a'];
+  if(productChannelChart)productChannelChart.destroy();
+  productChannelChart=new Chart(document.getElementById('productChannelChart'),{
+    type:'doughnut',
+    data:{labels:entries.map(([k])=>PRODUCT_CH_LABELS[k]),datasets:[{data:entries.map(([,v])=>v),backgroundColor:entries.map((_,i)=>colors[i%colors.length]),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed.toLocaleString('ko-KR')}개 (${(ctx.parsed/total*100).toFixed(1)}%)`}}}}
+  });
+
+  // 테이블
+  document.getElementById('product-channel-tbody').innerHTML=entries.map(([k,v])=>
+    `<tr><td>${PRODUCT_CH_LABELS[k]}</td><td class="num">${v.toLocaleString('ko-KR')}개</td><td class="num">${(v/total*100).toFixed(1)}%</td></tr>`
+  ).join('');
+}
+
 // 초기화
 window.addEventListener('load',()=>{
-  const k=localStorage.getItem('ak');if(k)document.getElementById('api-key').value=k;
+  try{const k=localStorage.getItem('ak');if(k){const el=document.getElementById('api-key');if(el)el.value=k;}}catch(e){}
 });
 </script>
 </body>
