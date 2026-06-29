@@ -235,6 +235,12 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
     <div style="position:relative;height:240px"><canvas id="adperfAcosChart" role="img" aria-label="채널별 ACoS 추이">ACoS 추이</canvas></div>
     <div style="font-size:11px;color:var(--hint);margin-top:8px">회색 점선: 2025년 동기간 · 진한 선: 2026년 · 낮을수록 효율적</div>
   </div>
+
+  <div class="section card">
+    <div class="card-title" id="adperf-combo-title">채널별 광고비·매출·ROAS 통합 추이</div>
+    <div style="position:relative;height:300px"><canvas id="adperfComboChart" role="img" aria-label="통합 추이">통합 추이</canvas></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:8px">막대: 광고비·광고매출 (왼쪽 축) · 선: ROAS % (오른쪽 축) · 연한 색: 2025년</div>
+  </div>
 </div>
 
 <!-- 제품별 분석 -->
@@ -289,7 +295,7 @@ let S = {
   hist:{months:[],revenue:[],adcost:[],profit:[],target:[]}
 };
 
-let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
+let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, adPerfComboChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
 let adPerfSelectedChannel='naverSa';
 let productSelected=null;
 
@@ -587,10 +593,16 @@ function calcPrevMonthSamePeriod(wb){
   const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
   const yr=S._latestYear; const mo=S._latestMonth;
 
-  // 이번 달 최대 일자 찾기
+  // 이번 달 최대 일자 찾기 (실제 전체매출이 있는 날까지만)
   let maxDay=0;
-  rows.forEach(row=>{
-    if(row[2]===yr&&row[3]===mo&&typeof row[4]==='number') maxDay=Math.max(maxDay,row[4]);
+  rows.forEach((row,i)=>{
+    if(row[2]===yr&&row[3]===mo&&typeof row[4]==='number'){
+      const prev=rows[i-1];
+      // 전체매출 합계행(이전행 col9='전체', 현재 col9가 양수)인 날만 유효
+      if(prev&&prev[9]==='전체'&&typeof row[9]==='number'&&row[9]>0){
+        maxDay=Math.max(maxDay,row[4]);
+      }
+    }
   });
   if(!maxDay) return;
 
@@ -1056,6 +1068,7 @@ function renderAdPerf(){
   renderAdPerfChart();
   renderAdPerfRoasChart();
   renderAdPerfAcosChart();
+  renderAdPerfCombo();
 }
 
 // 주차 날짜 라벨: 엑셀 시리얼(숫자) 또는 "YYYY-MM-DD" 문자열 → "M/D"
@@ -1299,6 +1312,67 @@ function renderAdPerfAcosChart(){
     }
   });
   document.getElementById('adperf-acos-trend-title').textContent=`${label} ACoS 추이`;
+}
+
+function renderAdPerfCombo(){
+  const weekly=S.adWeekly||[];
+  const k=adPerfSelectedChannel;
+  const label=AD_WEEKLY_LABELS[k];
+  const has2025=!NO_2025_CHANNELS.includes(k);
+  const MIN_AD=10000;
+
+  // x축 라벨 정렬: 2025 우선(더 길면), 아니면 2026
+  const labels2026=weekly.map(fmtWeekDate);
+  const labels2025=PREV_YEAR_AD_WEEKLY.map(fmtWeekDate);
+  const labels=has2025&&labels2025.length>=labels2026.length?labels2025:labels2026;
+
+  // 2026
+  const ad2026=weekly.map(w=>w[k+'_ad']||0);
+  const rev2026=weekly.map(w=>w[k+'_rev']||0);
+  const roas2026=weekly.map(w=>{const a=w[k+'_ad'];return(a&&a>=MIN_AD)?(w[k+'_rev']/a*100):null;});
+  // 2025
+  const ad2025=has2025?PREV_YEAR_AD_WEEKLY.map(w=>w[k+'_ad']||0):[];
+  const rev2025=has2025?PREV_YEAR_AD_WEEKLY.map(w=>w[k+'_rev']||0):[];
+  const roas2025=has2025?PREV_YEAR_AD_WEEKLY.map(w=>{const a=w[k+'_ad'];return(a&&a>=MIN_AD)?(w[k+'_rev']/a*100):null;}):[];
+
+  const datasets=[];
+  // 2026 막대 (광고비, 광고매출)
+  datasets.push({type:'bar',label:'광고비(26)',data:ad2026,backgroundColor:'rgba(26,25,23,.55)',yAxisID:'y',order:3,barPercentage:.9,categoryPercentage:.8});
+  datasets.push({type:'bar',label:'광고매출(26)',data:rev2026,backgroundColor:'rgba(45,122,79,.55)',yAxisID:'y',order:3,barPercentage:.9,categoryPercentage:.8});
+  // 2026 ROAS 선
+  datasets.push({type:'line',label:'ROAS(26)',data:roas2026,borderColor:'#1d4ed8',backgroundColor:'transparent',yAxisID:'y1',tension:.3,pointRadius:2,borderWidth:2.5,order:1,spanGaps:true});
+
+  if(has2025){
+    // 2025 막대 (연한색)
+    datasets.push({type:'bar',label:'광고비(25)',data:ad2025,backgroundColor:'rgba(26,25,23,.18)',yAxisID:'y',order:4,barPercentage:.9,categoryPercentage:.8});
+    datasets.push({type:'bar',label:'광고매출(25)',data:rev2025,backgroundColor:'rgba(45,122,79,.18)',yAxisID:'y',order:4,barPercentage:.9,categoryPercentage:.8});
+    // 2025 ROAS 선 (점선)
+    datasets.push({type:'line',label:'ROAS(25)',data:roas2025,borderColor:'rgba(29,78,216,.45)',backgroundColor:'transparent',borderDash:[4,3],yAxisID:'y1',tension:.3,pointRadius:1,borderWidth:1.5,order:2,spanGaps:true});
+  }
+
+  if(adPerfComboChart)adPerfComboChart.destroy();
+  adPerfComboChart=new Chart(document.getElementById('adperfComboChart'),{
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>{
+          const v=ctx.parsed.y;
+          if(v===null)return `${ctx.dataset.label}: -`;
+          if(ctx.dataset.yAxisID==='y1')return `${ctx.dataset.label}: ${v.toFixed(0)}%`;
+          return `${ctx.dataset.label}: ${Math.round(v).toLocaleString('ko-KR')}원`;
+        }}}
+      },
+      scales:{
+        y:{position:'left',beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},title:{display:true,text:'금액(원)',font:{size:10}},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},
+        y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},title:{display:true,text:'ROAS(%)',font:{size:10}},ticks:{callback:v=>v.toFixed(0)+'%',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:true,maxTicksLimit:20}}
+      }
+    }
+  });
+  document.getElementById('adperf-combo-title').textContent=`${label} 광고비·매출·ROAS 통합 추이`;
 }
 
 // ── 제품별 분석 ──
