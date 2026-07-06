@@ -367,6 +367,10 @@ const PREV_YEAR_CH_MONTHLY = {
   olive:   [21676988,20168978,37418405,15034606,19688324,19425465,17302641,17148529,15102417,11478506,16594388,19759747]
 };
 
+// ── 2025년 제품×채널 월별 판매수량 (제품별 채널 추이 작년 대비용) ──
+// {제품명: {채널: [1월~12월 수량]}}
+const PREV_YEAR_PRODUCT_CH = {"모두봄 새치 커버스틱 헤어틴트 내추럴블랙":{"naver":[760,806,1667,812,465,303,389,345,395,354,773,847],"coupang":[1035,830,1480,1595,1544,835,608,624,622,810,1263,858],"olive":[1469,632,676,560,474,388,175,277,296,254,458,380],"ably":[25,12,6,5,2,2,2,4,6,3,5,2],"zigzag":[12,12,13,28,11,0,7,13,49,22,35,66],"musinsa":[16,17,10,9,12,1,3,4,3,4,9,8],"11st":[0,5,3,1,0,0,2,3,2,0,3,1],"gmarket":[0,7,6,9,12,3,5,7,24,2,7,26],"gonggu":[0,0,0,9,65,381,0,0,0,0,0,0],"etc":[0,0,0,111,13,0,130,12,0,1,170,648],"qten":[0,0,0,0,0,1,0,0,4,2,2,3],"export":[0,0,0,0,0,0,74,0,0,0,0,0]},"모두봄 올데이 브러시픽서 울트라픽스":{"naver":[92,199,193,206,159,164,223,245,158,154,148,198],"coupang":[602,650,1094,971,833,1115,1222,840,1019,557,603,782],"olive":[782,1502,2959,792,913,846,1288,812,786,549,565,943],"ably":[93,92,105,105,157,63,49,30,21,14,21,18],"zigzag":[36,33,43,59,24,37,28,28,22,17,29,29],"musinsa":[10,20,39,39,21,6,3,6,3,8,17,10],"11st":[0,0,1,1,1,1,0,0,0,1,0,0],"qten":[0,0,7,1,2,5,1,4,12,3,0,2],"gonggu":[0,0,0,18,6,2,16,0,0,0,0,0],"etc":[0,0,0,187,0,0,205,18,0,0,2890,602],"gmarket":[0,0,0,0,3,1,0,3,4,0,1,4],"export":[0,0,0,0,0,0,20,145,1538,417,1055,398],"amazon":[0,0,0,0,0,0,0,0,0,0,0,4]},"모두봄 올데이 브러시픽서 매트피니시":{"naver":[95,120,74,109,71,71,82,142,76,63,60,80],"coupang":[416,464,773,588,429,310,279,243,200,253,213,466],"olive":[893,1080,2145,866,1397,1259,830,1150,840,435,858,1163],"ably":[200,166,188,211,375,112,79,125,28,16,21,31],"zigzag":[39,39,39,47,28,31,19,10,9,19,21,21],"musinsa":[19,12,20,37,11,4,0,2,6,7,8,7],"gmarket":[0,2,5,2,1,0,3,1,3,0,0,0],"qten":[0,0,7,1,1,6,1,6,7,4,2,2],"gonggu":[0,0,0,7,3,1,9,640,1280,160,642,179],"etc":[0,0,0,38,20,0,55,17,0,0,2890,691],"11st":[0,0,0,0,1,0,0,0,0,0,0,0],"export":[0,0,0,0,0,0,33,59,494,478,486,167],"amazon":[0,0,0,0,0,0,0,0,1,0,0,0]},"모두봄 올데이 헤어쿠션 내추럴블랙":{"naver":[38,34,11,37,34,47,47,39,53,312,192,179],"coupang":[42,32,50,39,29,16,18,11,21,36,74,45],"olive":[177,108,128,104,117,129,116,124,118,88,104,140],"ably":[33,48,27,28,37,27,17,10,15,10,8,7],"zigzag":[12,10,5,21,17,15,21,8,5,9,10,3],"musinsa":[1,0,1,0,1,3,3,2,7,3,4,4],"gmarket":[1,3,0,0,0,2,1,2,4,2,5,4],"qten":[0,0,4,1,3,8,3,2,11,1,3,0],"11st":[0,0,0,2,0,1,0,1,0,0,0,0],"etc":[0,0,0,31,3,7,55,12,8,0,120,4],"gonggu":[0,0,0,4,2,0,0,0,0,0,0,0],"export":[0,0,0,0,0,0,28,0,0,0,0,0],"amazon":[0,0,0,0,0,0,0,0,0,0,0,3]},"모두봄 올데이 헤어쿠션 다크브라운":{"naver":[22,27,20,23,31,36,49,38,23,286,193,139],"coupang":[23,24,36,74,46,39,31,25,20,55,92,40],"olive":[211,106,175,138,151,150,139,115,185,126,116,177],"ably":[17,14,6,6,20,9,5,1,8,3,5,2],"zigzag":[6,5,7,2,4,7,14,4,4,5,11,3],"musinsa":[1,1,0,1,1,0,1,4,6,2,0,1],"gmarket":[0,2,1,0,0,1,0,0,0,2,12,0],"qten":[0,0,3,0,8,20,1,9,24,2,0,1],"11st":[0,0,0,2,0,0,0,2,0,0,0,0],"gonggu":[0,0,0,3,1,1,0,0,0,0,0,0],"etc":[0,0,0,79,7,11,55,17,7,0,480,13],"export":[0,0,0,0,0,0,55,0,0,0,0,0],"amazon":[0,0,0,0,0,0,0,0,0,0,2,5]},"모두봄 샴푸 브러쉬":{"ably":[137,121,70,56,36,28,50,93,55,44,32,98],"gmarket":[0,2,0,0,0,0,0,0,0,0,0,0],"naver":[0,0,2,2,5,2,5,4,0,2,0,5],"gonggu":[0,0,0,26,0,0,0,0,0,0,0,0],"musinsa":[0,0,0,0,1,0,0,0,0,0,0,0],"export":[0,0,0,0,0,0,50,0,0,0,0,0],"etc":[0,0,0,0,0,0,0,0,0,0,180,0]},"모두봄 새치 커버스틱 헤어틴트 다크브라운":{"naver":[23,0,0,242,672,356,437,485,565,575,861,1029],"coupang":[41,0,0,82,972,952,598,958,1052,1184,1834,1885],"etc":[0,0,0,304,325,0,456,40,0,13,650,1394],"zigzag":[2,0,0,2,13,1,12,29,54,42,37,81],"11st":[0,0,0,1,1,0,1,1,1,9,0,3],"gmarket":[0,0,0,0,6,1,5,1,22,3,3,7],"ably":[0,0,0,0,4,1,4,2,2,1,2,3],"olive":[20,0,0,0,163,402,280,323,254,430,608,430],"musinsa":[0,0,0,0,1,6,2,3,8,3,3,10],"gonggu":[0,0,0,0,102,490,0,0,0,0,0,0],"qten":[0,0,0,0,0,0,1,2,9,2,3,2],"export":[0,0,0,0,0,0,146,0,0,0,0,0]}};
+
 // ── 2025년 일별 매출 데이터 (전년 동기간 비교용) ──
 const PREV_YEAR_DAILY = {
   '2025_03_01':8510915,'2025_03_02':7230490,'2025_03_03':6095452,'2025_03_04':5446258,
@@ -586,6 +590,19 @@ function parseHistFromSummary(wb){
     }
   });
 
+  // 광고비 총 합계 행(52행=idx51)에서 월별 광고비 맵 구성
+  // 이 행은 일별/실시간으로 채워져 월초에도 값이 존재 (요약 광고비 행10과 달리)
+  const adTotalRow = rows[51]||[];
+  const adcostMap={};
+  [2024,2025,2026].forEach(yr=>{
+    const start=yearCols[yr];
+    if(start===undefined)return;
+    for(let m=0;m<12;m++){
+      const v=adTotalRow[start+m];
+      if(typeof v==='number'&&v>0) adcostMap[`${yr}_${m+1}`]=v;
+    }
+  });
+
   [2024,2025,2026].forEach(yr=>{
     const start=yearCols[yr];
     if(start===undefined)return;
@@ -610,7 +627,8 @@ function parseHistFromSummary(wb){
   S.year=latestYear; S.month=latestMonth;
   S.revenue=revenue[last]||0;
   S.profit=profit[last]||0;
-  S.adcost=adcost[last]||0;
+  // 광고비는 총 합계 행(52행) 우선, 없으면 요약 광고비 행(10행) 폴백
+  S.adcost=(adcostMap[`${latestYear}_${latestMonth}`])||(adcost[last]||0);
   S.target=target[last]||0;
 
   // 전년 동월
@@ -624,6 +642,7 @@ function parseHistFromSummary(wb){
 
   // 목표매출 맵을 보관 (일별 최신월로 재설정 시 사용)
   S._targetMap=targetMap;
+  S._adcostMap=adcostMap;
   S._summaryLatestYear=latestYear;
   S._summaryLatestMonth=latestMonth;
 }
@@ -667,8 +686,9 @@ function rebaseToDailyLatest(wb){
     // 목표매출: 전체 종합 시트의 해당 월 목표
     if(S._targetMap) S.target=S._targetMap[`${latestY}_${latestM}`]||0;
 
-    // 이 달은 요약시트에 아직 없으므로 광고비/이익은 0으로 (일별 집계 대상 아님)
-    S.adcost=0;
+    // 광고비: 총 합계 행(52행)의 해당 월 값. 월초에도 실시간으로 채워짐
+    S.adcost=(S._adcostMap&&S._adcostMap[`${latestY}_${latestM}`])||0;
+    // 이익은 요약시트에 아직 없으므로 0 (일별 집계 대상 아님)
     S.profit=0;
 
     // 전년 동월 (요약 히스토리에서)
@@ -989,12 +1009,17 @@ function updateOverview(){
 
   // 예상 월말 목표 달성률 (현재 추세 기준 → 실제 매출 있는 날까지의 일평균 × 월 전체 일수)
   const fcEl=document.getElementById('ov-forecast');
-  if(S._maxDay&&S._maxDay>0&&revenue&&target){
+  let projectedRev=null; // 월말 예상 매출 (ACoS 분모로도 사용)
+  if(S._maxDay&&S._maxDay>0&&revenue){
     const daysInMonth=new Date(year,month,0).getDate();
     const dailyAvg=revenue/S._maxDay;
-    const projected=dailyAvg*daysInMonth;
-    const projAch=projected/target*100;
-    fcEl.textContent=`이 추세면 월말 예상 ${projAch.toFixed(0)}% · ${fmtM(projected)} (${S._maxDay}일간 일평균 ${fmtM(dailyAvg)})`;
+    projectedRev=dailyAvg*daysInMonth;
+    if(target){
+      const projAch=projectedRev/target*100;
+      fcEl.textContent=`이 추세면 월말 예상 ${projAch.toFixed(0)}% · ${fmtM(projectedRev)} (${S._maxDay}일간 일평균 ${fmtM(dailyAvg)})`;
+    }else{
+      fcEl.textContent='';
+    }
   }else{
     fcEl.textContent='';
   }
@@ -1007,10 +1032,16 @@ function updateOverview(){
   const yoy=prevYear&&revenue?(revenue-prevYear)/prevYear:null;
   document.getElementById('ov-yoy').textContent=yoy!==null?(yoy>0?'+':'')+(yoy*100).toFixed(1)+'%':'—';
   document.getElementById('ov-yoy-b').innerHTML=yoy!==null?bdg(yoy):'';
-  const acos=revenue&&adcost?adcost/revenue:null;
+
+  // ACoS = 광고비 ÷ 월말 예상 매출 (기간 정합성 확보). 예상매출 없으면 실측매출로 폴백
+  const acosBase = projectedRev || revenue;
+  const acos=acosBase&&adcost?adcost/acosBase:null;
   document.getElementById('ov-acos').textContent=acos!==null?(acos*100).toFixed(1)+'%':'—';
   const ab=document.getElementById('ov-acos-b');
-  if(acos!==null) ab.innerHTML=`<div class="badge ${acos<.25?'bg':'br'}">${acos<.25?'✓ 목표이내':'⚠ 목표초과'} (25%)</div>`;
+  if(acos!==null){
+    const basisLabel = projectedRev ? '월말 예상 매출 기준' : '현재 매출 기준';
+    ab.innerHTML=`<div class="badge ${acos<.25?'bg':'br'}">${acos<.25?'✓ 목표이내':'⚠ 목표초과'} (25%)</div><div style="font-size:10px;color:var(--hint);margin-top:3px">${basisLabel}</div>`;
+  }
 
   // 채널 요약
   const ch=S.channels;
@@ -1731,17 +1762,16 @@ function renderProductChannel(){
   ).join('');
 }
 
-// 선택 제품의 채널별 월간 판매수량 추이
+// 선택 제품의 채널별 월간 판매수량 추이 (2025 배경 + 2026 전경)
 function renderProductChannelTrend(){
   const P=S.products;
   const name=productSelected;
   const recs=P.data[name]||[];
-  const periods=P.periods; // '2026-06' 형식, 전체 기간
 
-  // x축 라벨
-  const labels=periods.map(p=>{const[yy,mm]=p.split('-');return `${yy.slice(2)}.${mm}`;});
+  // x축: 1~12월 고정 (전체 현황 월별 매출 그래프와 동일한 구조)
+  const labels=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-  // 제품이 실제로 판매된 채널만 표시 (전 기간 합계 > 0)
+  // 2026년: 제품이 실제 판매된 채널만 (전 기간 합계 > 0)
   const chTotals={};
   recs.forEach(r=>{
     Object.entries(r.channels||{}).forEach(([k,v])=>{ chTotals[k]=(chTotals[k]||0)+v; });
@@ -1750,22 +1780,60 @@ function renderProductChannelTrend(){
 
   const colors=['#3266ad','#e87c00','#3a9e68','#9b5de5','#f15bb5','#444','#ff6b35','#0099cc','#e63946','#ff9900','#0077b6','#888','#5b8c5a'];
 
-  const datasets=activeChannels.map((k,i)=>{
+  // 2025년 같은 제품 데이터 (없으면 신제품 → 배경선 생략)
+  const prev2025 = PREV_YEAR_PRODUCT_CH[name] || null;
+
+  // 기본 표시 채널 결정: 해외수출(export)은 순위와 무관하게 기본 off
+  // 나머지 채널만 판매량 순으로 상위 4개를 기본 표시
+  const defaultOnChannels = activeChannels.filter(k=>k!=='export').slice(0,4);
+
+  const datasets=[];
+  activeChannels.forEach((k,i)=>{
     const color=colors[i%colors.length];
-    const data=periods.map(p=>{
-      const[yy,mm]=p.split('-').map(Number);
-      const rec=recs.find(r=>r.year===yy&&r.month===mm);
+    const shown = defaultOnChannels.includes(k); // 해외수출 제외 상위 4개만 기본 on
+
+    // 2026년 전경선 (진하게)
+    const data2026=labels.map((_,idx)=>{
+      const mo=idx+1;
+      const rec=recs.find(r=>r.year===2026&&r.month===mo);
       if(!rec)return null;
       return rec.channels?.[k]??0;
     });
-    // 상위 4개 채널만 기본 표시, 나머지는 hidden (범례로 켜기)
-    return{
-      label:PRODUCT_CH_LABELS[k]||k,data,borderColor:color,backgroundColor:color+'14',
-      tension:.3,pointRadius:2,borderWidth:2,fill:false,spanGaps:false,hidden:i>=4
-    };
+    datasets.push({
+      label:`${PRODUCT_CH_LABELS[k]||k}`,
+      data:data2026,borderColor:color,backgroundColor:color+'14',
+      tension:.3,pointRadius:2,borderWidth:2.5,fill:false,spanGaps:false,hidden:!shown,
+      _grp:k,_year:2026
+    });
+
+    // 2025년 배경선 (연하게, 점선) — 데이터 있을 때만
+    if(prev2025 && prev2025[k]){
+      const data2025=prev2025[k].map(v=>v||null);
+      datasets.push({
+        label:`${PRODUCT_CH_LABELS[k]||k} (2025)`,
+        data:data2025,borderColor:color,backgroundColor:'transparent',
+        tension:.3,pointRadius:0,borderWidth:1.2,borderDash:[4,3],fill:false,spanGaps:true,
+        hidden:!shown,
+        _grp:k,_year:2025,
+        // 연하게: 색을 흐리게 처리
+        segment:{}, 
+      });
+    }
   });
 
-  document.getElementById('product-ch-trend-title').textContent=`${shortProductName(name)} 채널별 월간 판매수량 추이`;
+  // 2025 배경선 색을 반투명하게 (borderColor에 알파 적용)
+  datasets.forEach(ds=>{
+    if(ds._year===2025){
+      // hex → rgba 0.35
+      const c=ds.borderColor;
+      if(c && c[0]==='#'){
+        const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+        ds.borderColor=`rgba(${r},${g},${b},0.32)`;
+      }
+    }
+  });
+
+  document.getElementById('product-ch-trend-title').textContent=`${shortProductName(name)} 채널별 월간 판매수량 추이 (연한 점선: 2025년)`;
 
   if(productChTrendChart)productChTrendChart.destroy();
   productChTrendChart=new Chart(document.getElementById('productChTrendChart'),{
@@ -1775,7 +1843,26 @@ function renderProductChannelTrend(){
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true}},
+        legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true,
+          filter:(item)=>!item.text.includes('(2025)')}, // 범례엔 2026만 노출 (깔끔하게)
+          onClick:(e,legendItem,legend)=>{
+            const ch=legend.chart;
+            const idx=legendItem.datasetIndex;
+            const meta=ch.getDatasetMeta(idx);
+            const ds=ch.data.datasets[idx];
+            // 2026 선 토글
+            meta.hidden = meta.hidden===null ? !ch.data.datasets[idx].hidden : !meta.hidden;
+            // 같은 채널(_grp)의 2025 배경선도 함께 토글
+            const grp=ds._grp;
+            ch.data.datasets.forEach((d,i)=>{
+              if(d._grp===grp && d._year===2025){
+                const m=ch.getDatasetMeta(i);
+                m.hidden = meta.hidden;
+              }
+            });
+            ch.update();
+          }
+        },
         tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toLocaleString('ko-KR')+'개':'-'}`}}
       },
       scales:{
