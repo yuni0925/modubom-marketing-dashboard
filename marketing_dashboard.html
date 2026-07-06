@@ -151,6 +151,24 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
     <div class="card-title">월별 매출 추이</div>
     <div style="position:relative;height:200px"><canvas id="trendChart" role="img" aria-label="월별 매출 추이">월별 매출</canvas></div>
   </div>
+  <div class="section card">
+    <div class="card-title">주요 채널 작년 대비 매출 추이</div>
+    <div class="page-sub" style="margin-bottom:14px">네이버 · 쿠팡 · 올리브영의 2025년 대비 2026년 월별 매출입니다. 연한 선이 작년, 진한 선이 올해예요.</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:20px">
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--naver,#03c75a)">네이버</div>
+        <div style="position:relative;height:170px"><canvas id="chYoyNaver" role="img" aria-label="네이버 작년 대비">네이버</canvas></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#ff6f0f">쿠팡</div>
+        <div style="position:relative;height:170px"><canvas id="chYoyCoupang" role="img" aria-label="쿠팡 작년 대비">쿠팡</canvas></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#a3d43a">올리브영</div>
+        <div style="position:relative;height:170px"><canvas id="chYoyOlive" role="img" aria-label="올리브영 작년 대비">올리브영</canvas></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 채널별 분석 -->
@@ -272,6 +290,12 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
   </div>
 
   <div class="section card">
+    <div class="card-title" id="product-ch-trend-title">선택 제품 채널별 월간 판매수량 추이</div>
+    <div class="page-sub" style="margin-bottom:12px">선택한 제품이 채널마다 어떻게 팔려왔는지 월별로 보여줘요. 범례를 눌러 채널을 켜고 끌 수 있어요.</div>
+    <div style="position:relative;height:280px"><canvas id="productChTrendChart" role="img" aria-label="제품 채널별 추이">제품 채널별 추이</canvas></div>
+  </div>
+
+  <div class="section card">
     <div class="card-title" id="product-channel-table-title">선택 제품 채널별 판매수량</div>
     <div style="overflow-x:auto">
       <table><thead><tr><th>채널</th><th class="num">판매수량</th><th class="num">비중</th></tr></thead>
@@ -296,6 +320,7 @@ let S = {
 };
 
 let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, adPerfComboChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
+let chYoyNaverChart=null, chYoyCoupangChart=null, chYoyOliveChart=null, productChTrendChart=null;
 let adPerfSelectedChannel='naverSa';
 let productSelected=null;
 
@@ -333,6 +358,14 @@ function showPage(name){
   if(name==='product'){renderProduct();}
   if(name==='trend'){renderTrendDetail('monthly',document.querySelector('.tab.active'));}
 }
+
+// ── 2025년 채널별 월매출 (네이버/쿠팡/올리브영 작년 대비 비교용) ──
+// 단위: 원. 2025년 파일 '채널별 일 매출' 시트에서 월별 집계
+const PREV_YEAR_CH_MONTHLY = {
+  naver:   [17143000,19775000,22687700,23901700,23953800,15984700,20352900,21561000,21128600,26858000,35942300,40416600],
+  coupang: [33071700,30580800,52541400,51270500,59369500,50224700,42241300,41590800,45155700,44555900,62791400,62822900],
+  olive:   [21676988,20168978,37418405,15034606,19688324,19425465,17302641,17148529,15102417,11478506,16594388,19759747]
+};
 
 // ── 2025년 일별 매출 데이터 (전년 동기간 비교용) ──
 const PREV_YEAR_DAILY = {
@@ -476,8 +509,11 @@ async function handleFile(file){
 
     // 1. 전체 종합 → 월별 히스토리
     parseHistFromSummary(wb);
+    // 1-b. 일별 시트 최신월 기준으로 기준월/목표/매출 재설정
+    rebaseToDailyLatest(wb);
     // 2. 채널별 일 매출 → 채널별 매출 + 전월 동기간 계산
     parseChannelSales(wb);
+    parseKeyChannelMonthly(wb);
     calcPrevMonthSamePeriod(wb);
     // 3. 채널별 광고 → 채널별 광고비 + ROAS
     parseAdCost(wb);
@@ -585,6 +621,60 @@ function parseHistFromSummary(wb){
   S.prevMonth=0; // parseChannelSales 이후 별도 계산
   S._latestYear=latestYear;
   S._latestMonth=latestMonth;
+
+  // 목표매출 맵을 보관 (일별 최신월로 재설정 시 사용)
+  S._targetMap=targetMap;
+  S._summaryLatestYear=latestYear;
+  S._summaryLatestMonth=latestMonth;
+}
+
+// 일별 시트의 실제 최신 월을 기준으로 연/월/목표/매출을 재설정
+function rebaseToDailyLatest(wb){
+  const ws = wb.Sheets['채널별 일 매출'];
+  if(!ws) return;
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+
+  // 일별 데이터가 실제로 있는 가장 최신 (연,월) 찾기
+  let latestY=0, latestM=0;
+  rows.forEach((row,i)=>{
+    const yr=row[2],mo=row[3],day=row[4];
+    if(typeof yr!=='number'||yr<2024||yr>2030)return;
+    if(typeof mo!=='number'||mo<1||mo>12)return;
+    if(typeof day!=='number'||day<1||day>31)return;
+    const prev=rows[i-1];
+    if(prev&&prev[9]==='전체'&&typeof row[9]==='number'&&row[9]>0){
+      if(yr>latestY||(yr===latestY&&mo>latestM)){latestY=yr;latestM=mo;}
+    }
+  });
+  if(!latestY) return;
+
+  // 요약 시트 기준월과 다르면 (일별이 더 최신이면) 재설정
+  if(latestY!==S._summaryLatestYear||latestM!==S._summaryLatestMonth){
+    S._latestYear=latestY;
+    S._latestMonth=latestM;
+    S.year=latestY;
+    S.month=latestM;
+
+    // 이번 달 매출: 일별 시트에서 1~최신일 누적 (전체매출 합계행)
+    let mtdRev=0;
+    rows.forEach((row,i)=>{
+      if(row[2]!==latestY||row[3]!==latestM||typeof row[4]!=='number')return;
+      const prev=rows[i-1];
+      if(prev&&prev[9]==='전체'&&typeof row[9]==='number'&&row[9]>0) mtdRev+=row[9];
+    });
+    S.revenue=mtdRev;
+
+    // 목표매출: 전체 종합 시트의 해당 월 목표
+    if(S._targetMap) S.target=S._targetMap[`${latestY}_${latestM}`]||0;
+
+    // 이 달은 요약시트에 아직 없으므로 광고비/이익은 0으로 (일별 집계 대상 아님)
+    S.adcost=0;
+    S.profit=0;
+
+    // 전년 동월 (요약 히스토리에서)
+    const idx=S.hist.months.indexOf(`${String(latestY-1).slice(2)}.${String(latestM).padStart(2,'0')}`);
+    S.prevYear=idx>=0?S.hist.revenue[idx]:0;
+  }
 }
 
 function calcPrevMonthSamePeriod(wb){
@@ -633,23 +723,42 @@ function parseChannelSales(wb){
   const ws = wb.Sheets['채널별 일 매출'];
   if(!ws) return;
   const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-  // 월별 합계행: col4=연도, col5=월, col7=총매출(수백만 이상)
-  // 일별 데이터행: col2=연도, col3=월, col4=일(1~31)
-  // 구분: 일별행은 col4가 1~31, 합계행은 col4가 2024~2026
-  const colMap={naver:11,coupang:14,olive:17,ably:20,zigzag:23,musinsa:26,'11st':29,gmarket:32,qten:35,amazon:38,etc:44,export:47};
+  // 채널별 '매출' 컬럼 (일별행 기준): 네이버11 쿠팡14 올리브영17 에이블리20 지그재그23
+  // 무신사26 11번가29 G마켓32 큐텐35 아마존38 국내공구41 국내기타44 해외수출47
+  const colMap={naver:11,coupang:14,olive:17,ably:20,zigzag:23,musinsa:26,'11st':29,gmarket:32,qten:35,amazon:38,gonggu:41,etc:44,export:47};
   const ch=Object.fromEntries(Object.keys(colMap).map(k=>[k,0]));
+  // 일별 데이터행(col2=연,col3=월,col4=일)을 이번 달 기준으로 누적 합산
   rows.forEach(row=>{
-    const yr=row[4]; const mo=row[5];
-    if(yr!==S.year||mo!==S.month) return;
-    // 합계행: col4가 연도값(2024~2026), col2에 일별행처럼 연도가 없음
-    // col2가 연도값(2024~2026)이면 일별 데이터행이므로 제외
-    if(row[2]===2024||row[2]===2025||row[2]===2026) return;
-    if(typeof row[2]==='number'&&row[2]>2020&&row[2]<2030) return;
+    const yr=row[2],mo=row[3],day=row[4];
+    if(typeof yr!=='number'||yr!==S.year)return;
+    if(typeof mo!=='number'||mo!==S.month)return;
+    if(typeof day!=='number'||day<1||day>31)return;
     Object.entries(colMap).forEach(([k,c])=>{
-      if(typeof row[c]==='number'&&row[c]>0) ch[k]=row[c];
+      if(typeof row[c]==='number') ch[k]+=row[c];
     });
   });
   S.channels=ch;
+}
+
+// 네이버/쿠팡/올리브영 2026년 월별 매출 집계 (작년 대비 비교용)
+function parseKeyChannelMonthly(wb){
+  const ws = wb.Sheets['채널별 일 매출'];
+  if(!ws){ S.keyChMonthly=null; return; }
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+  const colMap={naver:11,coupang:14,olive:17};
+  // 2026년 1~12월 배열 초기화 (데이터 없는 달은 null 유지)
+  const cur={naver:new Array(12).fill(null),coupang:new Array(12).fill(null),olive:new Array(12).fill(null)};
+  const hasData=new Array(12).fill(false);
+  rows.forEach(row=>{
+    const yr=row[2],mo=row[3],day=row[4];
+    if(typeof yr!=='number'||yr!==2026||typeof mo!=='number'||mo<1||mo>12||typeof day!=='number'||day<1||day>31)return;
+    hasData[mo-1]=true;
+    Object.entries(colMap).forEach(([k,c])=>{
+      const v=row[c];
+      if(typeof v==='number'){ cur[k][mo-1]=(cur[k][mo-1]||0)+v; }
+    });
+  });
+  S.keyChMonthly={cur,hasData};
 }
 
 function parseAdCost(wb){
@@ -976,6 +1085,59 @@ function renderTrend(){
         x:{grid:{display:false},ticks:{font:{size:10}}}
       }
     }
+  });
+  renderKeyChannelYoY();
+}
+
+// 네이버/쿠팡/올리브영 작년 대비 월별 매출 차트
+function renderKeyChannelYoY(){
+  const km=S.keyChMonthly;
+  const xLabels=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const specs=[
+    {key:'naver',  canvas:'chYoyNaver',  chartRef:'chYoyNaverChart',  color:'#03c75a'},
+    {key:'coupang',canvas:'chYoyCoupang',chartRef:'chYoyCoupangChart',color:'#ff6f0f'},
+    {key:'olive',  canvas:'chYoyOlive',  chartRef:'chYoyOliveChart',  color:'#7cb518'}
+  ];
+  specs.forEach(sp=>{
+    const prev=PREV_YEAR_CH_MONTHLY[sp.key];
+    const cur=km?km.cur[sp.key]:new Array(12).fill(null);
+    // 기존 차트 제거
+    if(sp.key==='naver'&&chYoyNaverChart)chYoyNaverChart.destroy();
+    if(sp.key==='coupang'&&chYoyCoupangChart)chYoyCoupangChart.destroy();
+    if(sp.key==='olive'&&chYoyOliveChart)chYoyOliveChart.destroy();
+
+    const chart=new Chart(document.getElementById(sp.canvas),{
+      type:'line',
+      data:{labels:xLabels,datasets:[
+        {
+          label:'2025년',data:prev,
+          borderColor:'rgba(150,150,150,0.55)',backgroundColor:'transparent',
+          tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3],
+          pointBackgroundColor:'rgba(150,150,150,0.55)'
+        },
+        {
+          label:'2026년',data:cur,
+          borderColor:sp.color,backgroundColor:sp.color+'14',
+          tension:.4,pointRadius:3,fill:true,borderWidth:2.5,
+          pointBackgroundColor:sp.color,spanGaps:false
+        }
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:16,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?Math.round(ctx.parsed.y).toLocaleString('ko-KR')+'원':'-'}`}}
+        },
+        scales:{
+          y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:9}}},
+          x:{grid:{display:false},ticks:{font:{size:9}}}
+        }
+      }
+    });
+    if(sp.key==='naver')chYoyNaverChart=chart;
+    if(sp.key==='coupang')chYoyCoupangChart=chart;
+    if(sp.key==='olive')chYoyOliveChart=chart;
   });
 }
 
@@ -1540,6 +1702,9 @@ function renderProductChannel(){
   document.getElementById('product-channel-title').textContent=`${shortProductName(name)} 채널 구성 (${y}.${m})`;
   document.getElementById('product-channel-table-title').textContent=`${shortProductName(name)} 채널별 판매수량`;
 
+  // 채널별 월간 추이는 최신월 데이터 유무와 무관하게 항상 그림
+  renderProductChannelTrend();
+
   if(!rec){
     if(productChannelChart)productChannelChart.destroy();
     document.getElementById('product-channel-tbody').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--hint);padding:20px">데이터 없음</td></tr>';
@@ -1564,6 +1729,61 @@ function renderProductChannel(){
   document.getElementById('product-channel-tbody').innerHTML=entries.map(([k,v])=>
     `<tr><td>${PRODUCT_CH_LABELS[k]}</td><td class="num">${v.toLocaleString('ko-KR')}개</td><td class="num">${(v/total*100).toFixed(1)}%</td></tr>`
   ).join('');
+}
+
+// 선택 제품의 채널별 월간 판매수량 추이
+function renderProductChannelTrend(){
+  const P=S.products;
+  const name=productSelected;
+  const recs=P.data[name]||[];
+  const periods=P.periods; // '2026-06' 형식, 전체 기간
+
+  // x축 라벨
+  const labels=periods.map(p=>{const[yy,mm]=p.split('-');return `${yy.slice(2)}.${mm}`;});
+
+  // 제품이 실제로 판매된 채널만 표시 (전 기간 합계 > 0)
+  const chTotals={};
+  recs.forEach(r=>{
+    Object.entries(r.channels||{}).forEach(([k,v])=>{ chTotals[k]=(chTotals[k]||0)+v; });
+  });
+  const activeChannels=Object.keys(chTotals).filter(k=>chTotals[k]>0).sort((a,b)=>chTotals[b]-chTotals[a]);
+
+  const colors=['#3266ad','#e87c00','#3a9e68','#9b5de5','#f15bb5','#444','#ff6b35','#0099cc','#e63946','#ff9900','#0077b6','#888','#5b8c5a'];
+
+  const datasets=activeChannels.map((k,i)=>{
+    const color=colors[i%colors.length];
+    const data=periods.map(p=>{
+      const[yy,mm]=p.split('-').map(Number);
+      const rec=recs.find(r=>r.year===yy&&r.month===mm);
+      if(!rec)return null;
+      return rec.channels?.[k]??0;
+    });
+    // 상위 4개 채널만 기본 표시, 나머지는 hidden (범례로 켜기)
+    return{
+      label:PRODUCT_CH_LABELS[k]||k,data,borderColor:color,backgroundColor:color+'14',
+      tension:.3,pointRadius:2,borderWidth:2,fill:false,spanGaps:false,hidden:i>=4
+    };
+  });
+
+  document.getElementById('product-ch-trend-title').textContent=`${shortProductName(name)} 채널별 월간 판매수량 추이`;
+
+  if(productChTrendChart)productChTrendChart.destroy();
+  productChTrendChart=new Chart(document.getElementById('productChTrendChart'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y.toLocaleString('ko-KR')+'개':'-'}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v.toLocaleString('ko-KR'),font:{size:9}}},
+        x:{grid:{display:false},ticks:{font:{size:9}}}
+      }
+    }
+  });
 }
 
 // 초기화
