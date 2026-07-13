@@ -321,7 +321,7 @@ let S = {
 
 let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, adPerfComboChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
 let chYoyNaverChart=null, chYoyCoupangChart=null, chYoyOliveChart=null, productChTrendChart=null;
-let adPerfSelectedChannel='naverSa';
+let adPerfSelectedChannel='naverAll';
 let productSelected=null;
 
 // 채널 메타
@@ -331,7 +331,8 @@ const CH_INFO = {
   zigzag:{label:'지그재그',color:'#f15bb5'}, musinsa:{label:'무신사',color:'#444'},
   '11st':{label:'11번가',color:'#ff6b35'}, gmarket:{label:'G마켓/옥션',color:'#0099cc'},
   qten:{label:'큐텐JP',color:'#e63946'}, amazon:{label:'아마존US',color:'#ff9900'},
-  export:{label:'해외수출',color:'#0077b6'}, etc:{label:'공구/기타',color:'#888'}
+  gonggu:{label:'국내공구',color:'#00b4a0'}, export:{label:'해외수출',color:'#0077b6'},
+  etc:{label:'국내기타',color:'#888'}
 };
 const AD_INFO = {
   naver:{label:'네이버'}, coupang:{label:'쿠팡'}, olive:{label:'올리브영'},
@@ -523,6 +524,8 @@ async function handleFile(file){
     parseAdCost(wb);
     // 4. 채널별 광고 (주차별) → 채널별 광고 현황 탭
     parseAdWeekly(wb);
+    // 2025년 내장 데이터에도 합산 채널 주입 (최초 1회)
+    if(!window._prevAdCombined){ injectCombinedAd(PREV_YEAR_AD_WEEKLY); window._prevAdCombined=true; }
     // 5. 품목별 판매현황 → 제품별 분석
     parseProduct(wb);
 
@@ -824,9 +827,29 @@ const AD_WEEKLY_COLS = {
   amazon:{ad:33,rev:36}, tiktok:{ad:38,rev:41}
 };
 const AD_WEEKLY_LABELS = {
-  meta:'META', naverGfa:'네이버 GFA', naverSa:'네이버 SA', olive:'올리브영',
-  coupangCpc:'쿠팡(CPC)', coupangNew:'쿠팡(신규고객)', amazon:'아마존', tiktok:'틱톡'
+  meta:'META',
+  naverAll:'네이버(합산)', naverGfa:'네이버 GFA', naverSa:'네이버 SA',
+  olive:'올리브영',
+  coupangAll:'쿠팡(합산)', coupangCpc:'쿠팡(CPC)', coupangNew:'쿠팡(신규고객)',
+  amazon:'아마존', tiktok:'틱톡'
 };
+// 합산 채널 정의: {합산키: [세부키들]}
+const AD_COMBINED_CHANNELS = {
+  naverAll: ['naverGfa','naverSa'],
+  coupangAll: ['coupangCpc','coupangNew']
+};
+// 각 주차 데이터에 합산 채널 필드(_ad,_rev) 주입
+function injectCombinedAd(weekly){
+  weekly.forEach(w=>{
+    Object.entries(AD_COMBINED_CHANNELS).forEach(([combo,parts])=>{
+      let ad=0, rev=0;
+      parts.forEach(p=>{ ad+=w[p+'_ad']||0; rev+=w[p+'_rev']||0; });
+      w[combo+'_ad']=ad;
+      w[combo+'_rev']=rev;
+    });
+  });
+  return weekly;
+}
 // 2025년에 운영하지 않은 채널 (2025년 데이터 표시 안 함)
 const NO_2025_CHANNELS = ['amazon','tiktok'];
 
@@ -895,7 +918,7 @@ function parseAdWeekly(wb){
   // 가장 최근 연도만 유지 (이전 연도 12월 데이터가 섞이는 것 방지)
   if(weekly.length){
     const maxYear=Math.max(...weekly.map(w=>w.year));
-    S.adWeekly=weekly.filter(w=>w.year===maxYear);
+    S.adWeekly=injectCombinedAd(weekly.filter(w=>w.year===maxYear));
   }else{
     S.adWeekly=[];
   }
