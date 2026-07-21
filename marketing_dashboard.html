@@ -152,6 +152,11 @@ input:focus,select:focus{border-color:var(--accent);background:var(--surface)}
     <div style="position:relative;height:200px"><canvas id="trendChart" role="img" aria-label="월별 매출 추이">월별 매출</canvas></div>
   </div>
   <div class="section card">
+    <div class="card-title" id="mom-trend-title">전월 동기간 대비 추세</div>
+    <div class="page-sub" style="margin-bottom:14px" id="mom-trend-sub">이번 달 일자별 누적 매출을 전월 같은 기간과 비교합니다. 진한 선이 이번 달, 연한 선이 전월이에요.</div>
+    <div style="position:relative;height:220px"><canvas id="momChart" role="img" aria-label="전월 동기간 대비 추세">전월 동기간 대비</canvas></div>
+  </div>
+  <div class="section card">
     <div class="card-title">주요 채널 작년 대비 매출 추이</div>
     <div class="page-sub" style="margin-bottom:14px">네이버 · 쿠팡 · 올리브영의 2025년 대비 2026년 월별 매출입니다. 연한 선이 작년, 진한 선이 올해예요.</div>
     <div style="display:grid;grid-template-columns:1fr;gap:20px">
@@ -319,7 +324,7 @@ let S = {
   hist:{months:[],revenue:[],adcost:[],profit:[],target:[]}
 };
 
-let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, adPerfComboChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null;
+let trendChart=null, chPieChart=null, trendDetailChart=null, adPerfChart=null, adPerfRoasChart=null, adPerfAcosChart=null, adPerfComboChart=null, productTrendChart=null, productChannelChart=null, productWeeklyChart=null, momChart=null;
 let chYoyNaverChart=null, chYoyCoupangChart=null, chYoyOliveChart=null, productChTrendChart=null;
 let adPerfSelectedChannel='naverAll';
 let productSelected=null;
@@ -740,6 +745,27 @@ function calcPrevMonthSamePeriod(wb){
   S.prevMonth=prevMonthTotal;
   S.prevYear=prevYearTotal;
   S._maxDay=maxDay;
+
+  // 일자별 누적 시리즈 저장 (전월 동기간 대비 추세 차트용)
+  const daysInMonth=new Date(yr,mo,0).getDate();
+  const curDaily={}, prevDaily={};
+  rows.forEach((row,i)=>{
+    const prev=rows[i-1];
+    if(!(prev&&prev[9]==='전체'&&typeof row[9]==='number'&&row[9]>0))return;
+    if(row[2]===yr&&row[3]===mo&&typeof row[4]==='number') curDaily[row[4]]=row[9];
+    if(row[2]===prevYr&&row[3]===prevMo&&typeof row[4]==='number') prevDaily[row[4]]=row[9];
+  });
+  const curCumul=[], prevCumul=[];
+  let cc=0, pc=0;
+  for(let d=1;d<=daysInMonth;d++){
+    // 이번 달: maxDay까지만 (그 이후는 null)
+    if(d<=maxDay){ if(curDaily[d]!==undefined)cc+=curDaily[d]; curCumul.push(cc); }
+    else curCumul.push(null);
+    // 전월: 해당 월 일수까지 전체
+    if(prevDaily[d]!==undefined)pc+=prevDaily[d];
+    prevCumul.push(prevDaily[d]!==undefined||d<=new Date(prevYr,prevMo,0).getDate()?pc:null);
+  }
+  S.momSeries={curCumul,prevCumul,maxDay,daysInMonth,curMonth:mo,prevMonth:prevMo};
 }
 
 function parseChannelSales(wb){
@@ -749,18 +775,40 @@ function parseChannelSales(wb){
   // 채널별 '매출' 컬럼 (일별행 기준): 네이버11 쿠팡14 올리브영17 에이블리20 지그재그23
   // 무신사26 11번가29 G마켓32 큐텐35 아마존38 국내공구41 국내기타44 해외수출47
   const colMap={naver:11,coupang:14,olive:17,ably:20,zigzag:23,musinsa:26,'11st':29,gmarket:32,qten:35,amazon:38,gonggu:41,etc:44,export:47};
+
+  // 이번 달 실제 매출이 있는 마지막 일자(maxDay) 구하기
+  let maxDay=0;
+  rows.forEach((row,i)=>{
+    if(row[2]===S.year&&row[3]===S.month&&typeof row[4]==='number'){
+      const prev=rows[i-1];
+      if(prev&&prev[9]==='전체'&&typeof row[9]==='number'&&row[9]>0) maxDay=Math.max(maxDay,row[4]);
+    }
+  });
+
+  // 전월(동기간 비교용)
+  const prevMo=S.month===1?12:S.month-1;
+  const prevYr=S.month===1?S.year-1:S.year;
+
   const ch=Object.fromEntries(Object.keys(colMap).map(k=>[k,0]));
-  // 일별 데이터행(col2=연,col3=월,col4=일)을 이번 달 기준으로 누적 합산
+  const chPrev=Object.fromEntries(Object.keys(colMap).map(k=>[k,0]));
+
   rows.forEach(row=>{
     const yr=row[2],mo=row[3],day=row[4];
-    if(typeof yr!=='number'||yr!==S.year)return;
-    if(typeof mo!=='number'||mo!==S.month)return;
     if(typeof day!=='number'||day<1||day>31)return;
-    Object.entries(colMap).forEach(([k,c])=>{
-      if(typeof row[c]==='number') ch[k]+=row[c];
-    });
+    // 이번 달: 1~maxDay 누적
+    if(yr===S.year&&mo===S.month&&(!maxDay||day<=maxDay)){
+      Object.entries(colMap).forEach(([k,c])=>{ if(typeof row[c]==='number') ch[k]+=row[c]; });
+    }
+    // 전월: 같은 기간(1~maxDay)만 잘라서 누적 (공정 비교)
+    if(yr===prevYr&&mo===prevMo&&(!maxDay||day<=maxDay)){
+      Object.entries(colMap).forEach(([k,c])=>{ if(typeof row[c]==='number') chPrev[k]+=row[c]; });
+    }
   });
+
   S.channels=ch;
+  S.channelsPrev=chPrev;
+  S._chMaxDay=maxDay;
+  S._chPrevMonth=prevMo;
 }
 
 // 네이버/쿠팡/올리브영 2026년 월별 매출 집계 (작년 대비 비교용)
@@ -1086,6 +1134,17 @@ function updateOverview(){
     }).join('')+'</div>';
 }
 
+// 진행 중인 달의 실측 누적 → 월 전체 예상값 (단순 일평균 환산)
+// actualValue: 현재까지 누적, 0-index month(0~11)
+function projectMonthValue(actualValue, monthIdx){
+  if(actualValue===null||actualValue===undefined) return null;
+  // 진행 중인 달이 아니면(과거 달) 그대로 반환
+  if(!S._latestMonth || (monthIdx+1)!==S._latestMonth) return actualValue;
+  if(!S._maxDay || S._maxDay<=0) return actualValue;
+  const daysInMonth = new Date(S._latestYear||S.year, S._latestMonth, 0).getDate();
+  return actualValue / S._maxDay * daysInMonth;
+}
+
 function renderTrend(){
   const{months,revenue}=S.hist;
   if(!months.length)return;
@@ -1109,30 +1168,61 @@ function renderTrend(){
   // x축은 월(1~12월)로 통일
   const xLabels=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
+  // 진행 중인 달의 예상 매출 계산 (단순 일평균 환산)
+  const curMonthIdx = (S._latestMonth||S.month) - 1; // 0-index
+  const projected2026 = new Array(12).fill(null);
+  let hasProjection=false;
+  if(curMonthIdx>=0 && rev2026[curMonthIdx]!==null){
+    const projVal = projectMonthValue(rev2026[curMonthIdx], curMonthIdx);
+    // 예측이 실측보다 유의미하게 클 때만 표시 (월 진행 중일 때)
+    if(projVal!==null && projVal>rev2026[curMonthIdx]*1.001){
+      hasProjection=true;
+      // 점선은 직전 달(실측)에서 시작해 진행 달의 예상값으로 연결
+      if(curMonthIdx>0) projected2026[curMonthIdx-1]=rev2026[curMonthIdx-1];
+      projected2026[curMonthIdx]=projVal;
+    }
+  }
+
+  const datasets=[
+    {
+      label:'2025년',data:rev2025,
+      borderColor:'rgba(180,180,180,0.6)',
+      backgroundColor:'rgba(180,180,180,0.05)',
+      tension:.4,pointRadius:2,fill:false,borderWidth:1.5,
+      borderDash:[4,3],pointBackgroundColor:'rgba(180,180,180,0.6)'
+    },
+    {
+      label:'2026년 (실적)',data:rev2026,
+      borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.06)',
+      tension:.4,pointRadius:4,fill:true,borderWidth:2.5,
+      pointBackgroundColor:'#1a1917'
+    }
+  ];
+  if(hasProjection){
+    datasets.push({
+      label:'2026년 (예상)',data:projected2026,
+      borderColor:'#c0392b',backgroundColor:'transparent',
+      tension:.4,pointRadius:4,fill:false,borderWidth:2,
+      borderDash:[6,4],pointStyle:'rectRot',pointBackgroundColor:'#c0392b',
+      spanGaps:true
+    });
+  }
+
   trendChart=new Chart(document.getElementById('trendChart'),{
     type:'line',
-    data:{labels:xLabels,datasets:[
-      {
-        label:'2025년',data:rev2025,
-        borderColor:'rgba(180,180,180,0.6)',
-        backgroundColor:'rgba(180,180,180,0.05)',
-        tension:.4,pointRadius:2,fill:false,borderWidth:1.5,
-        borderDash:[4,3],pointBackgroundColor:'rgba(180,180,180,0.6)'
-      },
-      {
-        label:'2026년',data:rev2026,
-        borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.06)',
-        tension:.4,pointRadius:4,fill:true,borderWidth:2.5,
-        pointBackgroundColor:'#1a1917'
-      }
-    ]},
+    data:{labels:xLabels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{
           display:true,position:'top',
           labels:{font:{size:11},boxWidth:20,usePointStyle:true}
-        }
+        },
+        tooltip:{callbacks:{label:ctx=>{
+          if(ctx.parsed.y===null)return null;
+          const suffix=ctx.dataset.label.includes('예상')?' (예상)':'';
+          return `${ctx.dataset.label.replace(' (예상)','').replace(' (실적)','')}: ${fmtM(ctx.parsed.y)}${suffix}`;
+        }}}
       },
       scales:{
         y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},
@@ -1141,6 +1231,60 @@ function renderTrend(){
     }
   });
   renderKeyChannelYoY();
+  renderMomChart();
+}
+
+// 전월 동기간 대비 추세 (이번 달 vs 전월 일자별 누적)
+function renderMomChart(){
+  const ms=S.momSeries;
+  if(momChart)momChart.destroy();
+  if(!ms)return;
+  const labels=[];
+  for(let d=1;d<=ms.daysInMonth;d++)labels.push(d+'일');
+
+  document.getElementById('mom-trend-title').textContent=`${ms.curMonth}월 vs ${ms.prevMonth}월 동기간 누적 매출`;
+  document.getElementById('mom-trend-sub').textContent=`이번 달(${ms.curMonth}월) 일자별 누적 매출을 전월(${ms.prevMonth}월) 같은 기간과 비교합니다. 진한 선이 이번 달, 연한 선이 전월이에요.`;
+
+  momChart=new Chart(document.getElementById('momChart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {
+        label:`${ms.prevMonth}월 (전월)`,data:ms.prevCumul,
+        borderColor:'rgba(180,180,180,0.7)',backgroundColor:'transparent',
+        tension:.3,pointRadius:0,fill:false,borderWidth:1.5,borderDash:[4,3],spanGaps:true
+      },
+      {
+        label:`${ms.curMonth}월 (이번 달)`,data:ms.curCumul,
+        borderColor:'#1a1917',backgroundColor:'rgba(26,25,23,.06)',
+        tension:.3,pointRadius:2,fill:true,borderWidth:2.5,pointBackgroundColor:'#1a1917',spanGaps:false
+      }
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:18,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y!==null?`${ctx.dataset.label}: ${fmtM(ctx.parsed.y)}`:null,
+          afterBody:(items)=>{
+            // 이번 달과 전월 격차 표시
+            if(items.length>=2){
+              const cur=items.find(i=>i.dataset.label.includes('이번 달'));
+              const prev=items.find(i=>i.dataset.label.includes('전월'));
+              if(cur&&prev&&cur.parsed.y!==null&&prev.parsed.y!==null&&prev.parsed.y>0){
+                const diff=(cur.parsed.y-prev.parsed.y)/prev.parsed.y*100;
+                return `\n전월 대비 ${diff>0?'+':''}${diff.toFixed(1)}%`;
+              }
+            }
+            return '';
+          }
+        }}
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:10}}},
+        x:{grid:{display:false},ticks:{font:{size:9},maxTicksLimit:16}}
+      }
+    }
+  });
 }
 
 // 네이버/쿠팡/올리브영 작년 대비 월별 매출 차트
@@ -1160,28 +1304,56 @@ function renderKeyChannelYoY(){
     if(sp.key==='coupang'&&chYoyCoupangChart)chYoyCoupangChart.destroy();
     if(sp.key==='olive'&&chYoyOliveChart)chYoyOliveChart.destroy();
 
+    // 진행 중인 달 예상값 (단순 일평균 환산)
+    const curMonthIdx=(S._latestMonth||S.month)-1;
+    const proj=new Array(12).fill(null);
+    let hasProj=false;
+    if(curMonthIdx>=0 && cur[curMonthIdx]!==null && cur[curMonthIdx]!==undefined){
+      const pv=projectMonthValue(cur[curMonthIdx], curMonthIdx);
+      if(pv!==null && pv>cur[curMonthIdx]*1.001){
+        hasProj=true;
+        if(curMonthIdx>0) proj[curMonthIdx-1]=cur[curMonthIdx-1];
+        proj[curMonthIdx]=pv;
+      }
+    }
+
+    const datasets=[
+      {
+        label:'2025년',data:prev,
+        borderColor:'rgba(150,150,150,0.55)',backgroundColor:'transparent',
+        tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3],
+        pointBackgroundColor:'rgba(150,150,150,0.55)'
+      },
+      {
+        label:'2026년 (실적)',data:cur,
+        borderColor:sp.color,backgroundColor:sp.color+'14',
+        tension:.4,pointRadius:3,fill:true,borderWidth:2.5,
+        pointBackgroundColor:sp.color,spanGaps:false
+      }
+    ];
+    if(hasProj){
+      datasets.push({
+        label:'2026년 (예상)',data:proj,
+        borderColor:'#c0392b',backgroundColor:'transparent',
+        tension:.4,pointRadius:3,fill:false,borderWidth:1.8,borderDash:[6,4],
+        pointStyle:'rectRot',pointBackgroundColor:'#c0392b',spanGaps:true
+      });
+    }
+
     const chart=new Chart(document.getElementById(sp.canvas),{
       type:'line',
-      data:{labels:xLabels,datasets:[
-        {
-          label:'2025년',data:prev,
-          borderColor:'rgba(150,150,150,0.55)',backgroundColor:'transparent',
-          tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3],
-          pointBackgroundColor:'rgba(150,150,150,0.55)'
-        },
-        {
-          label:'2026년',data:cur,
-          borderColor:sp.color,backgroundColor:sp.color+'14',
-          tension:.4,pointRadius:3,fill:true,borderWidth:2.5,
-          pointBackgroundColor:sp.color,spanGaps:false
-        }
-      ]},
+      data:{labels:xLabels,datasets},
       options:{
         responsive:true,maintainAspectRatio:false,
         interaction:{mode:'index',intersect:false},
         plugins:{
           legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:16,usePointStyle:true}},
-          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!==null?Math.round(ctx.parsed.y).toLocaleString('ko-KR')+'원':'-'}`}}
+          tooltip:{callbacks:{label:ctx=>{
+            if(ctx.parsed.y===null)return null;
+            const suffix=ctx.dataset.label.includes('예상')?' (예상)':'';
+            const base=ctx.dataset.label.replace(' (예상)','').replace(' (실적)','');
+            return `${base}: ${Math.round(ctx.parsed.y).toLocaleString('ko-KR')}원${suffix}`;
+          }}}
         },
         scales:{
           y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>(v/10000).toFixed(0)+'만',font:{size:9}}},
@@ -1197,20 +1369,46 @@ function renderKeyChannelYoY(){
 
 function renderChList(){
   const ch=S.channels;
+  const chPrev=S.channelsPrev||{};
   const total=Object.values(ch).reduce((a,b)=>a+b,0);
   const el=document.getElementById('ch-list');
   if(!total){el.innerHTML='<div class="empty">데이터가 없습니다.</div>';return;}
+
+  const prevMoLabel=S._chPrevMonth?`${S._chPrevMonth}월`:'전월';
   el.innerHTML=Object.entries(ch).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a).map(([k,v])=>{
     const c=CH_INFO[k]||{label:k,color:'#aaa'};
     const p=total?(v/total*100).toFixed(1):0;
     const isMain=['naver','coupang','olive'].includes(k);
+    // 전월 동기간 대비 증감
+    const pv=chPrev[k]||0;
+    let deltaHtml='';
+    if(pv>0){
+      const d=(v-pv)/pv;
+      const cls=d>=0?'bg':'br';
+      const arrow=d>=0?'▲':'▼';
+      deltaHtml=`<div class="badge ${cls}" title="${prevMoLabel} 동기간 ${fmtM(pv)} 대비" style="font-size:10px">${arrow} ${Math.abs(d*100).toFixed(0)}%</div>`;
+    }else if(v>0){
+      deltaHtml=`<div class="badge bg" title="${prevMoLabel} 동기간 판매 없음" style="font-size:10px">NEW</div>`;
+    }
     return`<div class="ch-row">
       <div class="ch-name">${isMain?'⭐ ':''} ${c.label}</div>
       <div class="ch-bar-wrap"><div class="ch-bar" style="width:${p}%;background:${c.color}"></div></div>
-      <div class="ch-val">${fmtM(v)}</div>
+      <div class="ch-val">${fmtM(v)}<span style="display:block;font-size:10px;color:var(--hint);font-weight:400">전월 ${pv>0?fmtM(pv):'—'}</span></div>
       <div class="ch-pct">${p}%</div>
+      <div style="min-width:52px;text-align:right">${deltaHtml}</div>
     </div>`;
   }).join('');
+
+  // 안내 문구 (전월 동기간 기준임을 명시)
+  const noteId='ch-list-note';
+  let note=document.getElementById(noteId);
+  if(!note){
+    note=document.createElement('div');
+    note.id=noteId;
+    note.style.cssText='font-size:11px;color:var(--hint);margin-top:10px';
+    el.parentNode.appendChild(note);
+  }
+  note.textContent=`매출 아래 '전월'은 ${prevMoLabel} 같은 기간(1~${S._chMaxDay||'?'}일) 매출이며, 증감률도 이 기준입니다. 진행 중인 달을 공정하게 비교하기 위해 전월도 같은 일수까지만 집계했어요.`;
 }
 
 function renderChPie(){
